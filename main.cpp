@@ -1,6 +1,9 @@
-#include <iostream>
+#include "init.h"
+#include "uci_interaction.h"
 
 int main() {
-  std::cout << "Hello, World!" << std::endl;
-  return 0;
+  core::InitParameters();
+  core::InitRules();
+  core::SayHello();
+  uci::StartUciInteraction();
 }

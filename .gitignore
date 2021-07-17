@@ -30,3 +30,12 @@
 *.exe
 *.out
 *.app
+
+# Other
+.idea/*
+.vim/*
+.vimrc
+.clang-format
+.clang-tidy
+CMakeLists.txt.user
+*build*
