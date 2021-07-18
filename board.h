@@ -25,6 +25,31 @@ namespace core {
 
     void SetFen(std::string fen);
     std::string GetFen();
+
+    inline constexpr void ClearCastling() { castling_ = Castling::kNone; }
+    inline constexpr void SetAllCastling() { castling_ = Castling::kAll; }
+
+    inline constexpr bool IsAnyCastling() const { return HasCastling(castling_); }
+
+    inline constexpr bool IsKingsideCastling(Color c) const {
+      return HasCastling(castling_ & CastlingKingSide(c));
+    }
+
+    inline constexpr bool IsQueensideCastling(Color c) const {
+      return HasCastling(castling_ & CastlingQueenSide(c));
+    }
+
+    inline constexpr void SetKingsideCastling(Color c) { castling_ = castling_ | CastlingKingSide(c); }
+    inline constexpr void SetQueensideCastling(Color c) { castling_ = castling_ | CastlingQueenSide(c); }
+
+    inline constexpr void ClearKingsideCastling(Color c) { castling_ = castling_ & ~CastlingKingSide(c); }
+    inline constexpr void ClearQueensideCastling(Color c) { castling_ = castling_ & ~CastlingQueenSide(c); }
+    inline constexpr void ClearCastling(Color c) {
+      castling_ = castling_ & ~CastlingKingSide(c) & ~CastlingQueenSide(c);
+    }
+
+    inline constexpr void flipKingsideCastling(Color c) { castling_ = castling_ ^ CastlingKingSide(c); }
+    inline constexpr void flipQueensideCastling(Color c) { castling_ = castling_ ^ CastlingQueenSide(c); }
   };
 
 }  // namespace core

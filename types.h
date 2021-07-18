@@ -26,6 +26,19 @@ enum class Castling : uint8_t {
   kAll = 15
 };
 
+#define ENUM_TO_INT_OP(type, base, op)                                           \
+  inline constexpr type operator op(const type a, const type b) {                \
+    return static_cast<type>(static_cast<base>(a) op static_cast<base>(b));      \
+  }
+
+#define ENUM_TO_INT(type, base)      \
+  ENUM_TO_INT_OP(type, base, &)      \
+  ENUM_TO_INT_OP(type, base, |)      \
+  ENUM_TO_INT_OP(type, base, ^)      \
+  inline constexpr type operator~(const type a) { return type::kAll ^ a; }
+
+ENUM_TO_INT(Castling, uint8_t)
+
 enum class Color : int8_t {
   kWhite = 0,
   kBlack = 1

@@ -1,6 +1,8 @@
 #include "board.h"
 #include "zobrist_hash.h"
 
+#include <string>
+
 namespace core {
 void Board::Clear() {
   for (int i = 0; i < 64; i++) {
@@ -63,11 +65,55 @@ bool Board::CheckValidness() {
   return true;
 }
 
-void SetFen([[maybe_unused]]std::string fen) {
-
+void Board::SetFen(std::string fen) {
+  Clear();
+  std::vector<std::string> parsed_fen = ParseFen(fen);
+  int pos_x = 0;
+  int pos_y = 7;
+  for (auto i : parsed_fen[0]) {
+    if (i == '/') {
+      // TODO(Wind-Eagle): make some kind of errors when position/FEN is illegal:
+      // TODO(Wind-Eagle): program should throw an error and make initial position
+      continue;
+     }
+    if (i >= '0' && i <= '9') {
+      pos_x += (i - '0');
+    } else {
+      cells_[MakeCoord(pos_x, pos_y)] = MakePiece(i);
+      pos_x++;
+    }
+    if (pos_x == 8) {
+      pos_y--;
+      pos_x = 0;
+    }
+  }
+  //TODO(Wind-Eagle): again, make errors
+  if (parsed_fen[1][0] == 'w') {
+    move_side_ = Color::kWhite;
+  } else {
+    move_side_ = Color::kBlack;
+  }
+  if (parsed_fen[2] != "-") {
+    for (uint32_t i = 0; i < parsed_fen[2].size(); i++) {
+      if (parsed_fen[2][i] == 'K') {
+        SetKingsideCastling(Color::kWhite);
+      }
+      if (parsed_fen[2][i] == 'Q') {
+        SetQueensideCastling(Color::kWhite);
+      }
+      if (parsed_fen[2][i] == 'k') {
+        SetKingsideCastling(Color::kBlack);
+      }
+      if (parsed_fen[2][i] == 'q') {
+        SetQueensideCastling(Color::kBlack);
+      }
+    }
+  }
+  move_counter_ = std::stoi(parsed_fen[3]);
+  move_number_ = std::stoi(parsed_fen[4]);
 }
 
-std::string GetFen() {
+std::string Board::GetFen() {
   return "";
 }
 
