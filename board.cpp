@@ -35,17 +35,19 @@ void Board::MakeFromCells() {
     hash_ ^= core_private::zobrist_move_side;
   }
   for (int i = 0; i < 64; i++) {
-    if (GetPieceColor(cells_[i]) == Color::kWhite) {
-      b_white_ ^= (1ULL << i);
-    } else {
-      b_black_ ^= (1ULL << i);
+    if (cells_[i] != kEmptyCell) {
+      if (GetPieceColor(cells_[i]) == Color::kWhite) {
+        b_white_ ^= (1ULL << i);
+      } else {
+        b_black_ ^= (1ULL << i);
+      }
+      b_pieces_[cells_[i]] ^= (1ULL << i);
     }
-    b_pieces_[cells_[i]] ^= (1ULL << i);
   }
   b_all_ = b_white_ ^ b_black_;
 }
 
-bool Board::CheckValidness() {
+bool Board::CheckValidness() const {
   for (int i = 0; i < 64; i++) {
     if (!CheckCellValidness(cells_[i])) {
       return false;
@@ -109,11 +111,17 @@ void Board::SetFen(std::string fen) {
       }
     }
   }
-  move_counter_ = std::stoi(parsed_fen[3]);
-  move_number_ = std::stoi(parsed_fen[4]);
+  if (parsed_fen[3] != "-") {
+    en_passant_coord_ = MakeCoord(parsed_fen[3]);
+  } else {
+    en_passant_coord_ = kInvalidCoord;
+  }
+  move_counter_ = std::stoi(parsed_fen[4]);
+  move_number_ = std::stoi(parsed_fen[5]);
+  MakeFromCells();
 }
 
-std::string Board::GetFen() {
+inline std::string Board::GetFen() const {
   return "";
 }
 

@@ -21,10 +21,21 @@ namespace core {
 
     void Clear();
     void MakeFromCells();
-    bool CheckValidness();
+    bool CheckValidness() const;
+
+    inline constexpr bitboard_t GetColorBitboard(Color c) {
+      return (c == Color::kWhite) ? b_white_ : b_black_;
+    }
+
+    inline constexpr bitboard_t GetPieceBitboard(cell_t c) {
+      return b_pieces_[c];
+    }
 
     void SetFen(std::string fen);
-    std::string GetFen();
+    void SetStartPos() {
+      SetFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+    }
+    inline std::string GetFen() const;
 
     inline constexpr void ClearCastling() { castling_ = Castling::kNone; }
     inline constexpr void SetAllCastling() { castling_ = Castling::kAll; }

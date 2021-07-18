@@ -1,5 +1,6 @@
 #include "types.h"
 #include <ctime>
+#include <iostream>
 #include <random>
 #include <vector>
 
@@ -20,6 +21,10 @@ inline constexpr subcoord_t GetY(coord_t coord) {
 
 inline constexpr coord_t MakeCoord(subcoord_t x, subcoord_t y) {
   return (y << 3) ^ x;
+}
+
+inline coord_t MakeCoord(std::string coord) {
+  return MakeCoord(coord[0] - 'a', coord[1] - '1');
 }
 
 inline constexpr int ColorOffset(Color color) {
@@ -97,11 +102,20 @@ inline std::vector<std::string> ParseFen(std::string fen) {
     } else {
       cur += i;
     }
-    if (!cur.empty()) {
-      ans.push_back(cur);
-    }
+  }
+  if (!cur.empty()) {
+    ans.push_back(cur);
   }
   return ans;
+}
+
+inline void PrintBitBoard(bitboard_t bitboard) {
+  for (subcoord_t i = 0; i < 8; i++) {
+    for (subcoord_t j = 0; j < 8; j++) {
+      std::cout << (((bitboard & (1ULL << ((i << 3) + j))) == 0) ? 0 : 1);
+    }
+    std::cout << std::endl;
+  }
 }
 
 }  // namespace core

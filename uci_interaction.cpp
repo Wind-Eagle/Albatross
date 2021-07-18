@@ -1,6 +1,10 @@
 #include "uci_interaction.h"
+#include "board.h"
 #include <iostream>
 #include <string>
+
+using core::Color;
+using core::Piece;
 
 namespace uci {
   void UciStart() {
@@ -13,6 +17,7 @@ namespace uci {
   }
 
   void StartUciInteraction() {
+    core::Board board;
     while (true) {
       std::string command;
       std::cin >> command;
@@ -21,9 +26,24 @@ namespace uci {
       } else if (command == "isready") {
         uci::UciReady();
       } else if (command == "position") {
-
+        std::string position;
+        std::cin >> position;
+        if (position == "startpos") {
+          board.SetStartPos();
+        } else {
+          std::string fen_part;
+          for (int i = 0; i < 4; i++) {
+            std::cin >> fen_part;
+            position += " " + fen_part;
+          }
+          board.SetFen(position);
+        }
       } else if (command == "go") {
-
+        if (!board.CheckValidness()) {
+          std::cout << "Board is invalid!" << std::endl;
+        }
+        core::PrintBitBoard(board.GetColorBitboard(Color::kWhite));
+        core::PrintBitBoard(board.GetPieceBitboard(core::MakePiece('P')));
       } else if (command == "quit") {
         break;
       }
