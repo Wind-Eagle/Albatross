@@ -4,8 +4,26 @@
 #include <string>
 
 namespace core {
+
+inline std::vector<std::string> ParseFen(std::string fen) {
+  std::vector<std::string> ans;
+  std::string cur = "";
+  for (auto i : fen) {
+    if (i == ' ') {
+      ans.push_back(cur);
+      cur = "";
+    } else {
+      cur += i;
+    }
+  }
+  if (!cur.empty()) {
+    ans.push_back(cur);
+  }
+  return ans;
+}
+
 void Board::Clear() {
-  for (int i = 0; i < 64; i++) {
+  for (coord_t i = 0; i < 64; i++) {
     cells_[i] = kEmptyCell;
   }
   move_side_ = Color::kWhite;
@@ -24,7 +42,7 @@ void Board::Clear() {
 }
 
 void Board::MakeFromCells() {
-  for (int i = 0; i < 64; i++) {
+  for (coord_t i = 0; i < 64; i++) {
     hash_ ^= core_private::zobrist_cells[cells_[i]][i];
   }
   if (en_passant_coord_ != kInvalidCoord) {
@@ -56,7 +74,7 @@ bool Board::CheckValidness() const {
   if (b_all_ != (b_white_ | b_black_)) {
     return false;
   }
-  if (b_white_ & b_black_) {
+  if (static_cast<bitboard_t>(b_white_) & b_black_) {
     return false;
   }
   if (en_passant_coord_ != kInvalidCoord) {

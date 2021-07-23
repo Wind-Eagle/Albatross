@@ -1,3 +1,4 @@
+#include "constants.h"
 #include "types.h"
 
 #ifndef ZOBRIST_HASH_H_

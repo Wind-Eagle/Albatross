@@ -1,4 +1,5 @@
 #include "types.h"
+#include "constants.h"
 #include <ctime>
 #include <iostream>
 #include <random>
@@ -11,12 +12,30 @@ static std::mt19937 rndgen32(time(nullptr));
 static std::mt19937_64 rndgen64(time(nullptr));
 
 namespace core {
+inline constexpr Color InvertColor(Color c) {
+  return (c == Color::kWhite) ? Color::kBlack : Color::kWhite;
+}
+
+inline constexpr Color ChangeColor(Color& c) {
+  return (c == Color::kWhite) ? Color::kBlack : Color::kWhite;
+}
+
 inline constexpr subcoord_t GetX(coord_t coord) {
   return (coord & 7);
 }
 
 inline constexpr subcoord_t GetY(coord_t coord) {
   return (coord >> 3);
+}
+
+template<Color c>
+inline constexpr coord_t IncY(coord_t coord) {
+  return (c == Color::kWhite) ? coord + 8 : coord - 8;
+}
+
+template<Color c>
+inline constexpr coord_t DecY(coord_t coord) {
+  return (c == Color::kWhite) ? coord - 8 : coord + 8;
 }
 
 inline constexpr coord_t MakeCoord(subcoord_t x, subcoord_t y) {
@@ -90,23 +109,6 @@ inline uint64_t GetRandom64() {
 
 inline constexpr bool CheckCellValidness(cell_t piece) {
   return piece < kPiecesTypeCount && piece != kInvalidCell && piece != kColorOffset;
-}
-
-inline std::vector<std::string> ParseFen(std::string fen) {
-  std::vector<std::string> ans;
-  std::string cur = "";
-  for (auto i : fen) {
-    if (i == ' ') {
-      ans.push_back(cur);
-      cur = "";
-    } else {
-      cur += i;
-    }
-  }
-  if (!cur.empty()) {
-    ans.push_back(cur);
-  }
-  return ans;
 }
 
 inline void PrintBitBoard(bitboard_t bitboard) {
