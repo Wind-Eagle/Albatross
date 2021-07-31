@@ -12,12 +12,12 @@ static std::mt19937 rndgen32(time(nullptr));
 static std::mt19937_64 rndgen64(time(nullptr));
 
 namespace core {
-inline constexpr Color InvertColor(Color c) {
+inline constexpr Color GetInvertedColor(Color c) {
   return (c == Color::kWhite) ? Color::kBlack : Color::kWhite;
 }
 
-inline constexpr Color ChangeColor(Color& c) {
-  return (c == Color::kWhite) ? Color::kBlack : Color::kWhite;
+inline void ChangeColor(Color& c) {
+  c = GetInvertedColor(c);
 }
 
 inline constexpr subcoord_t GetX(coord_t coord) {
@@ -31,6 +31,11 @@ inline constexpr subcoord_t GetY(coord_t coord) {
 template<Color c>
 inline constexpr coord_t IncY(coord_t coord) {
   return (c == Color::kWhite) ? coord + 8 : coord - 8;
+}
+
+template<Color c>
+inline constexpr coord_t IncYDouble(coord_t coord) {
+  return (c == Color::kWhite) ? coord + 16 : coord - 16;
 }
 
 template<Color c>
@@ -54,36 +59,36 @@ inline constexpr Color GetPieceColor(cell_t piece) {
   return piece < kColorOffset ? Color::kWhite : Color::kBlack;
 }
 
-inline constexpr cell_t MakePiece(Color color, Piece piece) {
+inline constexpr cell_t MakeCell(Color color, Piece piece) {
   return ColorOffset(color) + static_cast<int>(piece);
 }
 
-inline constexpr cell_t MakePiece(char piece) {
+inline constexpr cell_t MakeCell(char piece) {
   switch (piece) {
-    case 'p':
-      return MakePiece(Color::kWhite, Piece::kPawn);
-    case 'n':
-      return MakePiece(Color::kWhite, Piece::kKnight);
-    case 'b':
-      return MakePiece(Color::kWhite, Piece::kBishop);
-    case 'r':
-      return MakePiece(Color::kWhite, Piece::kRook);
-    case 'q':
-      return MakePiece(Color::kWhite, Piece::kQueen);
-    case 'k':
-      return MakePiece(Color::kWhite, Piece::kKing);
     case 'P':
-      return MakePiece(Color::kBlack, Piece::kPawn);
+      return MakeCell(Color::kWhite, Piece::kPawn);
     case 'N':
-      return MakePiece(Color::kBlack, Piece::kKnight);
+      return MakeCell(Color::kWhite, Piece::kKnight);
     case 'B':
-      return MakePiece(Color::kBlack, Piece::kBishop);
+      return MakeCell(Color::kWhite, Piece::kBishop);
     case 'R':
-      return MakePiece(Color::kBlack, Piece::kRook);
+      return MakeCell(Color::kWhite, Piece::kRook);
     case 'Q':
-      return MakePiece(Color::kBlack, Piece::kQueen);
+      return MakeCell(Color::kWhite, Piece::kQueen);
     case 'K':
-      return MakePiece(Color::kBlack, Piece::kKing);
+      return MakeCell(Color::kWhite, Piece::kKing);
+    case 'p':
+      return MakeCell(Color::kBlack, Piece::kPawn);
+    case 'n':
+      return MakeCell(Color::kBlack, Piece::kKnight);
+    case 'b':
+      return MakeCell(Color::kBlack, Piece::kBishop);
+    case 'r':
+      return MakeCell(Color::kBlack, Piece::kRook);
+    case 'q':
+      return MakeCell(Color::kBlack, Piece::kQueen);
+    case 'k':
+      return MakeCell(Color::kBlack, Piece::kKing);
     default:
       return kEmptyCell;
   }
@@ -118,6 +123,38 @@ inline void PrintBitBoard(bitboard_t bitboard) {
     }
     std::cout << std::endl;
   }
+}
+
+inline constexpr bool IsEqualToFigure(cell_t cell, Piece piece) {
+  return (cell & 7) == static_cast<int8_t>(piece);
+}
+
+inline std::string CoordToString(coord_t coord) {
+  std::string answer = "!!";
+  answer[0] = (coord & 8) + 'a';
+  answer[1] = (coord >> 3) + '1';
+  return answer;
+}
+
+inline coord_t StringToCoord(const std::string& str) {
+  return (((str[1] - '1') << 3) + (str[0] - 'a'));
+}
+
+inline std::vector<std::string> ParseLine(std::string str) {
+  std::vector<std::string> ans;
+  std::string cur = "";
+  for (auto i : str) {
+    if (i == ' ') {
+      ans.push_back(cur);
+      cur = "";
+    } else {
+      cur += i;
+    }
+  }
+  if (!cur.empty()) {
+    ans.push_back(cur);
+  }
+  return ans;
 }
 
 }  // namespace core

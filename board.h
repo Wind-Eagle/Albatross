@@ -6,6 +6,24 @@
 #define BOARD_H_
 
 namespace core {
+enum class BoardValidness {
+  kInvalidBb,
+  kInvalidBbAll,
+  kInvalidBbWhite,
+  kInvalidBbBlack,
+  kInvalidBbPiece,
+  kInvalidCell,
+  kInvalidEnPassant,
+  kInvalidPawn,
+  kNoWhiteKing,
+  kNoBlackKing,
+  kTooManyWhiteKings,
+  kTooManyBlackKings,
+  kTooManyPawns,
+  kKingIsAttacked,
+  kValid
+};
+
 struct Board {
   cell_t cells_[64];
   Color move_side_;
@@ -21,8 +39,10 @@ struct Board {
   bitboard_t b_pieces_[kPiecesTypeCount];
 
   void Clear();
+  void ClearHashAndBitboards();
   void MakeFromCells();
-  bool CheckValidness() const;
+  BoardValidness CheckValidness() const;
+  static std::string GetBoardValidness(BoardValidness id);
 
   inline constexpr bitboard_t GetColorBitboard(Color c) {
     return (c == Color::kWhite) ? b_white_ : b_black_;

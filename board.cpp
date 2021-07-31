@@ -5,21 +5,14 @@
 
 namespace core {
 
-inline std::vector<std::string> ParseFen(std::string fen) {
-  std::vector<std::string> ans;
-  std::string cur = "";
-  for (auto i : fen) {
-    if (i == ' ') {
-      ans.push_back(cur);
-      cur = "";
-    } else {
-      cur += i;
-    }
+void Board::ClearHashAndBitboards() {
+  hash_ = 0;
+  b_white_ = 0;
+  b_black_ = 0;
+  b_all_ = 0;
+  for (int i = 0; i < kPiecesTypeCount; i++) {
+    b_pieces_[i] = 0;
   }
-  if (!cur.empty()) {
-    ans.push_back(cur);
-  }
-  return ans;
 }
 
 void Board::Clear() {
@@ -31,14 +24,7 @@ void Board::Clear() {
   en_passant_coord_ = kInvalidCoord;
   move_counter_ = 0;
   move_number_ = 0;
-
-  hash_ = 0;
-  b_white_ = 0;
-  b_black_ = 0;
-  b_all_ = 0;
-  for (int i = 0; i < kPiecesTypeCount; i++) {
-    b_pieces_[i] = 0;
-  }
+  ClearHashAndBitboards();
 }
 
 void Board::MakeFromCells() {
@@ -65,29 +51,127 @@ void Board::MakeFromCells() {
   b_all_ = b_white_ ^ b_black_;
 }
 
-bool Board::CheckValidness() const {
-  for (int i = 0; i < 64; i++) {
-    if (!CheckCellValidness(cells_[i])) {
-      return false;
-    }
-  }
+BoardValidness Board::CheckValidness() const {
   if (b_all_ != (b_white_ | b_black_)) {
-    return false;
+    return BoardValidness::kInvalidBb;
   }
   if (static_cast<bitboard_t>(b_white_) & b_black_) {
-    return false;
+    return BoardValidness::kInvalidBb;
   }
   if (en_passant_coord_ != kInvalidCoord) {
     if (GetY(en_passant_coord_) < 3 || GetY(en_passant_coord_) > 4) {
-      return false;
+      return BoardValidness::kInvalidEnPassant;
     }
   }
-  return true;
+  for (int i = 0; i < 64; i++) {
+    if (!CheckCellValidness(cells_[i])) {
+      return BoardValidness::kInvalidCell;
+    }
+  }
+  for (int i = 0; i < 8; i++) {
+    if (cells_[i] == MakeCell('p')) {
+      return BoardValidness::kInvalidPawn;
+    }
+  }
+  for (int i = 56; i < 64; i++) {
+    if (cells_[i] == MakeCell('P')) {
+      return BoardValidness::kInvalidPawn;
+    }
+  }
+  Board new_board = (*this);
+  new_board.ClearHashAndBitboards();
+  new_board.MakeFromCells();
+  if (b_all_ != new_board.b_all_) {
+    return BoardValidness::kInvalidBbAll;
+  }
+  if (b_white_ != new_board.b_white_) {
+    return BoardValidness::kInvalidBbWhite;
+  }
+  if (b_black_ != new_board.b_black_) {
+    return BoardValidness::kInvalidBbBlack;
+  }
+  for (int i = 0; i < kPiecesTypeCount; i++) {
+    if (b_pieces_[i] != new_board.b_pieces_[i]) {
+      return BoardValidness::kInvalidBbPiece;
+    }
+  }
+  if (b_pieces_[MakeCell('K')] == 0) {
+    return BoardValidness::kNoWhiteKing;
+  }
+  if (b_pieces_[MakeCell('k')] == 0) {
+    return BoardValidness::kNoBlackKing;
+  }
+  if (__builtin_popcountll(b_pieces_[MakeCell('K')]) > 1) {
+    return BoardValidness::kTooManyWhiteKings;
+  }
+  if (__builtin_popcountll(b_pieces_[MakeCell('k')]) > 1) {
+    return BoardValidness::kTooManyBlackKings;
+  }
+  if (__builtin_popcountll(b_pieces_[MakeCell('P')]) > 8) {
+    return BoardValidness::kTooManyPawns;
+  }
+  if (__builtin_popcountll(b_pieces_[MakeCell('p')]) > 8) {
+    return BoardValidness::kTooManyPawns;
+  }
+  return BoardValidness::kValid;
+}
+
+std::string Board::GetBoardValidness(BoardValidness id) {
+  switch (id) {
+    case BoardValidness::kInvalidBb: {
+      return "kInvalidBb";
+    }
+    case BoardValidness::kInvalidBbAll: {
+      return "kInvalidBbAll";
+    }
+    case BoardValidness::kInvalidBbWhite: {
+      return "kInvalidBbWhite";
+    }
+    case BoardValidness::kInvalidBbBlack: {
+      return "kInvalidBbBlack";
+    }
+    case BoardValidness::kInvalidBbPiece: {
+      return "kInvalidBbPiece";
+    }
+    case BoardValidness::kInvalidCell: {
+      return "kInvalidCell";
+    }
+    case BoardValidness::kInvalidEnPassant: {
+      return "kInvalidEnPassant";
+    }
+    case BoardValidness::kInvalidPawn: {
+      return "kInvalidPawn";
+    }
+    case BoardValidness::kNoWhiteKing: {
+      return "kInvalidNoWhiteKing";
+    }
+    case BoardValidness::kNoBlackKing: {
+      return "kInvalidNoBlackKing";
+    }
+    case BoardValidness::kTooManyWhiteKings: {
+      return "kTooManyWhiteKings";
+    }
+    case BoardValidness::kTooManyBlackKings: {
+      return "kTooManyBlackKings";
+    }
+    case BoardValidness::kTooManyPawns: {
+      return "kTooManyPawns";
+    }
+    case BoardValidness::kKingIsAttacked: {
+      return "kKingIsAttacked";
+    }
+    case BoardValidness::kValid: {
+      return "kValid";
+    }
+    default: {
+      return "unknown";
+    }
+  }
 }
 
 void Board::SetFen(std::string fen) {
   Clear();
-  std::vector<std::string> parsed_fen = ParseFen(fen);
+  std::vector<std::string> parsed_fen = ParseLine(fen);
   int pos_x = 0;
   int pos_y = 7;
   for (auto i : parsed_fen[0]) {
@@ -95,11 +179,11 @@ void Board::SetFen(std::string fen) {
       // TODO(Wind-Eagle): make some kind of errors when position/FEN is illegal:
       // TODO(Wind-Eagle): program should throw an error and make initial position
       continue;
-     }
+    }
     if (i >= '0' && i <= '9') {
       pos_x += (i - '0');
     } else {
-      cells_[MakeCoord(pos_x, pos_y)] = MakePiece(i);
+      cells_[MakeCoord(pos_x, pos_y)] = MakeCell(i);
       pos_x++;
     }
     if (pos_x == 8) {

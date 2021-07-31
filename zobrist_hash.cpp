@@ -35,15 +35,15 @@ void InitZobrist() {
     const int index = static_cast<int>(c);
     const coord_t offset = (c == Color::kWhite) ? 0 : 56;
     core_private::zobrist_queenside_castling[index] =
-        core_private::zobrist_cells[core::MakePiece(c, Piece::kKing)][offset + 4]
-            ^ core_private::zobrist_cells[core::MakePiece(c, Piece::kRook)][offset]
-            ^ core_private::zobrist_cells[core::MakePiece(c, Piece::kKing)][offset + 2]
-            ^ core_private::zobrist_cells[core::MakePiece(c, Piece::kRook)][offset + 3];
+        core_private::zobrist_cells[core::MakeCell(c, Piece::kKing)][offset + 4]
+            ^ core_private::zobrist_cells[core::MakeCell(c, Piece::kRook)][offset]
+            ^ core_private::zobrist_cells[core::MakeCell(c, Piece::kKing)][offset + 2]
+            ^ core_private::zobrist_cells[core::MakeCell(c, Piece::kRook)][offset + 3];
     core_private::zobrist_kingside_castling[index] =
-        core_private::zobrist_cells[core::MakePiece(c, Piece::kKing)][offset + 4]
-            ^ core_private::zobrist_cells[core::MakePiece(c, Piece::kRook)][offset + 7]
-            ^ core_private::zobrist_cells[core::MakePiece(c, Piece::kKing)][offset + 6]
-            ^ core_private::zobrist_cells[core::MakePiece(c, Piece::kRook)][offset + 5];
+        core_private::zobrist_cells[core::MakeCell(c, Piece::kKing)][offset + 4]
+            ^ core_private::zobrist_cells[core::MakeCell(c, Piece::kRook)][offset + 7]
+            ^ core_private::zobrist_cells[core::MakeCell(c, Piece::kKing)][offset + 6]
+            ^ core_private::zobrist_cells[core::MakeCell(c, Piece::kRook)][offset + 5];
   }
 }
 
