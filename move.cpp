@@ -136,11 +136,15 @@ inline void MakeKingsideCastling(Board& board) {
   if (c == Color::kWhite) {
     if (t == MoveHandleType::kMake) {
       board.hash_ ^= core_private::zobrist_kingside_castling[static_cast<int>(Color::kWhite)];
+      board.hash_ ^= core_private::zobrist_castling[static_cast<int>(board.castling_)];
     }
     board.b_pieces_[MakeCell('K')] ^= kWhiteKingsideCastlingBitboardKing;
     board.b_pieces_[MakeCell('R')] ^= kWhiteKingsideCastlingBitboardRook;
     board.b_white_ ^= kWhiteKingsideCastlingBitboard;
     board.castling_ = board.castling_ & kCancelCastingWhite;
+    if (t == MoveHandleType::kMake) {
+      board.hash_ ^= core_private::zobrist_castling[static_cast<int>(board.castling_)];
+    }
   } else {
     if (t == MoveHandleType::kMake) {
       board.hash_ ^= core_private::zobrist_kingside_castling[static_cast<int>(Color::kBlack)];
@@ -149,6 +153,9 @@ inline void MakeKingsideCastling(Board& board) {
     board.b_pieces_[MakeCell('r')] ^= kBlackKingsideCastlingBitboardRook;
     board.b_black_ ^= kBlackKingsideCastlingBitboard;
     board.castling_ = board.castling_ & kCancelCastingBlack;
+    if (t == MoveHandleType::kMake) {
+      board.hash_ ^= core_private::zobrist_castling[static_cast<int>(board.castling_)];
+    }
   }
 }
 
@@ -157,11 +164,15 @@ inline void MakeQueensideCastling(Board& board) {
   if (c == Color::kWhite) {
     if (t == MoveHandleType::kMake) {
       board.hash_ ^= core_private::zobrist_queenside_castling[static_cast<int>(Color::kWhite)];
+      board.hash_ ^= core_private::zobrist_castling[static_cast<int>(board.castling_)];
     }
     board.b_pieces_[MakeCell('K')] ^= kWhiteQueensideCastlingBitboardKing;
     board.b_pieces_[MakeCell('R')] ^= kWhiteQueensideCastlingBitboardRook;
     board.b_white_ ^= kWhiteQueensideCastlingBitboard;
     board.castling_ = board.castling_ & kCancelCastingWhite;
+    if (t == MoveHandleType::kMake) {
+      board.hash_ ^= core_private::zobrist_castling[static_cast<int>(board.castling_)];
+    }
   } else {
     if (t == MoveHandleType::kMake) {
       board.hash_ ^= core_private::zobrist_queenside_castling[static_cast<int>(Color::kBlack)];
@@ -170,6 +181,9 @@ inline void MakeQueensideCastling(Board& board) {
     board.b_pieces_[MakeCell('r')] ^= kBlackQueensideCastlingBitboardRook;
     board.b_black_ ^= kBlackQueensideCastlingBitboard;
     board.castling_ = board.castling_ & kCancelCastingBlack;
+    if (t == MoveHandleType::kMake) {
+      board.hash_ ^= core_private::zobrist_castling[static_cast<int>(board.castling_)];
+    }
   }
 }
 
@@ -178,6 +192,9 @@ InvertMove MakeMoveColor(Board& board, const Move& move) {
   InvertMove invert_move
       {board.cells_[move.dst_], board.hash_, board.castling_, board.en_passant_coord_,
        board.move_counter_};
+  if (board.en_passant_coord_ != kInvalidCoord) {
+    board.hash_^=core_private::zobrist_en_passant[board.en_passant_coord_];
+  }
   switch (move.type_) {
     case MoveType::kNull: {
       break;
@@ -266,7 +283,7 @@ InvertMove MakeMoveColor(Board& board, const Move& move) {
         board.move_counter_++;
       }
       if (move.type_ == MoveType::kPawnDouble) {
-        board.en_passant_coord_ = IncYDouble<c>(move.src_);
+        board.en_passant_coord_ = IncY<c>(move.src_);
       } else {
         board.en_passant_coord_ = kInvalidCoord;
       }
@@ -281,6 +298,9 @@ InvertMove MakeMoveColor(Board& board, const Move& move) {
     board.move_number_++;
   }
   ChangeColor(board.move_side_);
+  if (board.en_passant_coord_ != kInvalidCoord) {
+    board.hash_^=core_private::zobrist_en_passant[board.en_passant_coord_];
+  }
   board.hash_ ^= core_private::zobrist_move_side;
   board.b_all_ = board.b_white_ ^ board.b_black_;
   return invert_move;
@@ -426,6 +446,7 @@ Move StringToMove(Board& board, const std::string& str) {
   MoveType type = MoveType::kSimple;
   coord_t src = StringToCoord(str.substr(0, 2));
   coord_t dst = StringToCoord(str.substr(2, 2));
+  std::cout<<(int)src<<" "<<(int)dst<<" "<<(int)board.cells_[src]<<" "<<(int)board.cells_[dst]<<std::endl;
   if (IsEqualToFigure(board.cells_[src], Piece::kKing)) {
     if (dst - src == 2) {
       type = MoveType::kKingsideCastling;

@@ -34,11 +34,6 @@ inline constexpr coord_t IncY(coord_t coord) {
 }
 
 template<Color c>
-inline constexpr coord_t IncYDouble(coord_t coord) {
-  return (c == Color::kWhite) ? coord + 16 : coord - 16;
-}
-
-template<Color c>
 inline constexpr coord_t DecY(coord_t coord) {
   return (c == Color::kWhite) ? coord - 8 : coord + 8;
 }
