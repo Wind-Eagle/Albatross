@@ -94,6 +94,35 @@ struct Board {
   inline constexpr void flipQueensideCastling(Color c) {
     castling_ = castling_ ^ CastlingQueenSide(c);
   }
+
+  bool operator == (const Board& rhs) {
+    if (!(this->castling_ == rhs.castling_ &&
+    this->b_all_ == rhs.b_all_ &&
+    this->b_white_ == rhs.b_white_ &&
+    this->b_black_ == rhs.b_black_ &&
+    this->en_passant_coord_ == rhs.en_passant_coord_ &&
+    this->move_counter_ == rhs.move_counter_ &&
+    this->hash_ == rhs.hash_ &&
+    this->move_side_ == rhs.move_side_ &&
+    this->move_number_ == rhs.move_number_)) {
+      return false;
+    }
+    for (int i = 0; i < 64; i++) {
+      if (cells_[i] != rhs.cells_[i]) {
+        return false;
+      }
+    }
+    for (int i = 0; i < kPiecesTypeCount; i++) {
+      if (b_pieces_[i] != rhs.b_pieces_[i]) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  bool operator != (Board& rhs) {
+    return (!((*this) == rhs));
+  }
 };
 
 }  // namespace core

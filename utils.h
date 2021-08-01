@@ -131,7 +131,7 @@ inline constexpr bool IsEqualToFigure(cell_t cell, Piece piece) {
 
 inline std::string CoordToString(coord_t coord) {
   std::string answer = "!!";
-  answer[0] = (coord & 8) + 'a';
+  answer[0] = (coord & 7) + 'a';
   answer[1] = (coord >> 3) + '1';
   return answer;
 }

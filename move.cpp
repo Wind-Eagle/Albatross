@@ -74,11 +74,8 @@ inline constexpr void ChangeCellWithMove(Board& board,
 }
 
 template<Color c>
-inline void ChangePiece(Board& board, coord_t src, cell_t dst) {
-  board.hash_ ^= core_private::zobrist_cells[board.cells_[src]][src];
-  board.hash_ ^= core_private::zobrist_cells[dst][src];
-  board.b_pieces_[board.cells_[src]] ^= (1ULL << src);
-  board.b_pieces_[dst] ^= (1ULL << dst);
+inline void AddPiece(Board& board, coord_t src, cell_t dst) {
+  board.b_pieces_[dst] ^= (1ULL << src);
   if (c == Color::kWhite) {
     board.b_white_ ^= (1ULL << src);
   } else {
@@ -106,8 +103,6 @@ inline void MakePromotion(Board& board, coord_t src, coord_t dst, cell_t piece) 
     board.cells_[dst] = piece;
     board.cells_[src] = kEmptyCell;
   } else {
-    board.cells_[dst] = piece;
-    board.cells_[src] = kEmptyCell;
     ChangeCellWithMove<c, t>(board, src, dst, piece);
   }
 }
@@ -303,13 +298,15 @@ void UnmakeMoveColor(Board& board, const Move& move, const InvertMove& inverted_
     }
     case MoveType::kEnPassant: {
       board.cells_[move.dst_] = kEmptyCell;
-      board.cells_[move.src_] = inverted_move.dst_cell_;
-      board.cells_[DecY<c>(move.dst_)] = MakeCell(c, Piece::kPawn);
-      ChangeCellWithMove<c, MoveHandleType::kMake>(board, move.src_, move.dst_);
-      DeletePiece<c>(board, DecY<c>(move.dst_));
+      board.cells_[move.src_] = MakeCell(c, Piece::kPawn);
+      board.cells_[DecY<c>(move.dst_)] = MakeCell(GetInvertedColor(c), Piece::kPawn);
+      ChangeCellWithMove<c, MoveHandleType::kUnmake>(board, move.src_, move.dst_);
+      AddPiece<GetInvertedColor(c)>(board, DecY<c>(move.dst_), board.cells_[DecY<c>(move.dst_)]);
       break;
     }
     case MoveType::kKnightPromotion: {
+      board.cells_[move.src_] = MakeCell(c, Piece::kPawn);
+      board.cells_[move.dst_] = inverted_move.dst_cell_;
       MakePromotion<c, MoveHandleType::kUnmake>(board,
                                                 move.src_,
                                                 move.dst_,
@@ -317,32 +314,38 @@ void UnmakeMoveColor(Board& board, const Move& move, const InvertMove& inverted_
       break;
     }
     case MoveType::kBishopPromotion: {
+      board.cells_[move.src_] = MakeCell(c, Piece::kPawn);
+      board.cells_[move.dst_] = inverted_move.dst_cell_;
       MakePromotion<c, MoveHandleType::kUnmake>(board,
                                                 move.src_,
                                                 move.dst_,
-                                                MakeCell(c, Piece::kKnight));
+                                                MakeCell(c, Piece::kBishop));
       break;
     }
     case MoveType::kRookPromotion: {
+      board.cells_[move.src_] = MakeCell(c, Piece::kPawn);
+      board.cells_[move.dst_] = inverted_move.dst_cell_;
       MakePromotion<c, MoveHandleType::kUnmake>(board,
                                                 move.src_,
                                                 move.dst_,
-                                                MakeCell(c, Piece::kKnight));
+                                                MakeCell(c, Piece::kRook));
       break;
     }
     case MoveType::kQueenPromotion: {
+      board.cells_[move.src_] = MakeCell(c, Piece::kPawn);
+      board.cells_[move.dst_] = inverted_move.dst_cell_;
       MakePromotion<c, MoveHandleType::kUnmake>(board,
                                                 move.src_,
                                                 move.dst_,
-                                                MakeCell(c, Piece::kKnight));
+                                                MakeCell(c, Piece::kQueen));
       break;
     }
     case MoveType::kKingsideCastling: {
       if (c == Color::kWhite) {
         board.cells_[5] = kEmptyCell;
         board.cells_[6] = kEmptyCell;
-        board.cells_[4] = MakeCell('R');
-        board.cells_[7] = MakeCell('K');
+        board.cells_[4] = MakeCell('K');
+        board.cells_[7] = MakeCell('R');
       } else {
         board.cells_[61] = kEmptyCell;
         board.cells_[62] = kEmptyCell;
@@ -374,11 +377,10 @@ void UnmakeMoveColor(Board& board, const Move& move, const InvertMove& inverted_
       break;
     }
   }
-  if (c == Color::kWhite) {
+  ChangeColor(board.move_side_);
+  if (c == Color::kBlack) {
     board.move_number_--;
   }
-  ChangeColor(board.move_side_);
-  board.hash_ ^= core_private::zobrist_move_side;
   board.b_all_ = board.b_white_ ^ board.b_black_;
 }
 
@@ -388,8 +390,8 @@ InvertMove MakeMove(Board& board, const Move& move) {
 }
 
 void UnmakeMove(Board& board, const Move& move, const InvertMove& inverted_move) {
-  (board.move_side_ == Color::kWhite) ? UnmakeMoveColor<Color::kWhite>(board, move, inverted_move)
-                                      : UnmakeMoveColor<Color::kBlack>(board, move, inverted_move);
+  (board.move_side_ == Color::kWhite) ? UnmakeMoveColor<Color::kBlack>(board, move, inverted_move)
+                                      : UnmakeMoveColor<Color::kWhite>(board, move, inverted_move);
 }
 
 std::string MoveToString(const Move& move) {
