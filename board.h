@@ -1,9 +1,9 @@
+#ifndef BOARD_H_
+#define BOARD_H_
+
 #include "types.h"
 #include "utils.h"
 #include "constants.h"
-
-#ifndef BOARD_H_
-#define BOARD_H_
 
 namespace core {
 enum class BoardValidness {

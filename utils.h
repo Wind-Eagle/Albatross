@@ -1,3 +1,6 @@
+#ifndef UTLIS_H_
+#define UTLIS_H_
+
 #include "types.h"
 #include "constants.h"
 #include <ctime>
@@ -5,13 +8,24 @@
 #include <random>
 #include <vector>
 
-#ifndef UTLIS_H_
-#define UTLIS_H_
-
 static std::mt19937 rndgen32(time(nullptr));
 static std::mt19937_64 rndgen64(time(nullptr));
 
 namespace core {
+inline constexpr coord_t GetLowest(bitboard_t b) {
+  return __builtin_ctzll(b);
+}
+
+inline constexpr void ClearLowest(bitboard_t& b) {
+  b &= (b - 1);
+}
+
+inline constexpr coord_t ExtractLowest(bitboard_t& b) {
+  coord_t res = GetLowest(b);
+  ClearLowest(b);
+  return res;
+}
+  
 inline constexpr Color GetInvertedColor(Color c) {
   return (c == Color::kWhite) ? Color::kBlack : Color::kWhite;
 }
@@ -44,6 +58,10 @@ inline constexpr coord_t MakeCoord(subcoord_t x, subcoord_t y) {
 
 inline coord_t MakeCoord(std::string coord) {
   return MakeCoord(coord[0] - 'a', coord[1] - '1');
+}
+
+inline constexpr bool IsCoordPairValid(subcoord_t x, subcoord_t y) {
+  return x >= 0 && x < 8 && y >= 0 && y < 8;
 }
 
 inline constexpr int ColorOffset(Color color) {

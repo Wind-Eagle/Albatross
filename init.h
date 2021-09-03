@@ -6,6 +6,6 @@ namespace core {
   void InitRules();
   void SayHello();
 
-}  // namespace core_init
+}  // namespace core
 
 #endif  // INIT_H_
