@@ -68,7 +68,7 @@ inline constexpr int ColorOffset(Color color) {
   return (color == Color::kWhite) ? 0 : kColorOffset;
 }
 
-inline constexpr Color GetPieceColor(cell_t piece) {
+inline constexpr Color GetCellColor(cell_t piece) {
   return piece < kColorOffset ? Color::kWhite : Color::kBlack;
 }
 

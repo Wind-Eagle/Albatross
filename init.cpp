@@ -5,7 +5,7 @@
 
 namespace core {
   void InitParameters() {
-    core_private::InitZobrist();
+    core::InitZobrist();
   }
   void InitRules() {
 

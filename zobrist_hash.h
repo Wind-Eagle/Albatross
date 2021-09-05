@@ -7,7 +7,7 @@
 using core::hash_t;
 using core::kPiecesTypeCount;
 
-namespace core_private {
+namespace core {
   void InitZobrist();
 
   extern hash_t zobrist_cells[kPiecesTypeCount][64];
@@ -17,6 +17,6 @@ namespace core_private {
   extern hash_t zobrist_queenside_castling[2];
   extern hash_t zobrist_move_side;
 
-}  // namespace core_private
+}  // namespace core
 
 #endif  // ZOBRIST_HASH_H_

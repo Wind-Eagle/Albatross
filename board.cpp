@@ -29,18 +29,18 @@ void Board::Clear() {
 
 void Board::MakeFromCells() {
   for (coord_t i = 0; i < 64; i++) {
-    hash_ ^= core_private::zobrist_cells[cells_[i]][i];
+    hash_ ^= core::zobrist_cells[cells_[i]][i];
   }
   if (en_passant_coord_ != kInvalidCoord) {
-    hash_ ^= core_private::zobrist_en_passant[en_passant_coord_];
+    hash_ ^= core::zobrist_en_passant[en_passant_coord_];
   }
-  hash_ ^= core_private::zobrist_castling[static_cast<uint8_t>(castling_)];
+  hash_ ^= core::zobrist_castling[static_cast<uint8_t>(castling_)];
   if (move_side_ == Color::kWhite) {
-    hash_ ^= core_private::zobrist_move_side;
+    hash_ ^= core::zobrist_move_side;
   }
   for (int i = 0; i < 64; i++) {
     if (cells_[i] != kEmptyCell) {
-      if (GetPieceColor(cells_[i]) == Color::kWhite) {
+      if (GetCellColor(cells_[i]) == Color::kWhite) {
         b_white_ ^= (1ULL << i);
       } else {
         b_black_ ^= (1ULL << i);
@@ -174,7 +174,7 @@ void Board::SetFen(std::string fen) {
   std::vector<std::string> parsed_fen = ParseLine(fen);
   int pos_x = 0;
   int pos_y = 7;
-  for (auto i : parsed_fen[0]) {
+  for (auto i: parsed_fen[0]) {
     if (i == '/') {
       // TODO(Wind-Eagle): make some kind of errors when position/FEN is illegal:
       // TODO(Wind-Eagle): program should throw an error and make initial position

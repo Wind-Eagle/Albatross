@@ -48,9 +48,9 @@ inline constexpr void ChangeCellWithMove(Board& board,
   cell_t piece_dst = board.cells_[dst];
   piece_promotion = (piece_promotion == kInvalidCell) ? board.cells_[src] : piece_promotion;
   if (t == MoveHandleType::kMake) {
-    board.hash_ ^= core_private::zobrist_cells[piece_src][src];
-    board.hash_ ^= core_private::zobrist_cells[piece_dst][dst];
-    board.hash_ ^= core_private::zobrist_cells[piece_promotion][dst];
+    board.hash_ ^= core::zobrist_cells[piece_src][src];
+    board.hash_ ^= core::zobrist_cells[piece_dst][dst];
+    board.hash_ ^= core::zobrist_cells[piece_promotion][dst];
   }
   if (c == Color::kWhite) {
     board.b_white_ ^= (1ULL << src);
@@ -85,7 +85,7 @@ inline void AddPiece(Board& board, coord_t src, cell_t dst) {
 
 template<Color c>
 inline void DeletePiece(Board& board, coord_t src) {
-  board.hash_ ^= core_private::zobrist_cells[board.cells_[src]][src];
+  board.hash_ ^= core::zobrist_cells[board.cells_[src]][src];
   board.b_pieces_[board.cells_[src]] ^= (1ULL << src);
   if (c == Color::kWhite) {
     board.b_white_ ^= (1ULL << src);
@@ -111,7 +111,7 @@ template<Color c>
 inline void UpdateCastling(Board& board, coord_t src, coord_t dst) {
   if (board.castling_ != Castling::kNone) {
     bitboard_t bb_used = (1ULL << src) ^(1ULL << dst);
-    board.hash_ ^= core_private::zobrist_castling[static_cast<int>(board.castling_)];
+    board.hash_ ^= core::zobrist_castling[static_cast<int>(board.castling_)];
     if (c == Color::kWhite) {
       if (bb_used & kWhiteQueensideCastlingCoord) {
         board.castling_ = board.castling_ & kCancelCastingWhiteQueenSide;
@@ -127,7 +127,7 @@ inline void UpdateCastling(Board& board, coord_t src, coord_t dst) {
         board.castling_ = board.castling_ & kCancelCastingBlackKingSide;
       }
     }
-    board.hash_ ^= core_private::zobrist_castling[static_cast<int>(board.castling_)];
+    board.hash_ ^= core::zobrist_castling[static_cast<int>(board.castling_)];
   }
 }
 
@@ -135,26 +135,26 @@ template<Color c, MoveHandleType t>
 inline void MakeKingsideCastling(Board& board) {
   if (c == Color::kWhite) {
     if (t == MoveHandleType::kMake) {
-      board.hash_ ^= core_private::zobrist_kingside_castling[static_cast<int>(Color::kWhite)];
-      board.hash_ ^= core_private::zobrist_castling[static_cast<int>(board.castling_)];
+      board.hash_ ^= core::zobrist_kingside_castling[static_cast<int>(Color::kWhite)];
+      board.hash_ ^= core::zobrist_castling[static_cast<int>(board.castling_)];
     }
     board.b_pieces_[MakeCell('K')] ^= kWhiteKingsideCastlingBitboardKing;
     board.b_pieces_[MakeCell('R')] ^= kWhiteKingsideCastlingBitboardRook;
     board.b_white_ ^= kWhiteKingsideCastlingBitboard;
     board.castling_ = board.castling_ & kCancelCastingWhite;
     if (t == MoveHandleType::kMake) {
-      board.hash_ ^= core_private::zobrist_castling[static_cast<int>(board.castling_)];
+      board.hash_ ^= core::zobrist_castling[static_cast<int>(board.castling_)];
     }
   } else {
     if (t == MoveHandleType::kMake) {
-      board.hash_ ^= core_private::zobrist_kingside_castling[static_cast<int>(Color::kBlack)];
+      board.hash_ ^= core::zobrist_kingside_castling[static_cast<int>(Color::kBlack)];
     }
     board.b_pieces_[MakeCell('k')] ^= kBlackKingsideCastlingBitboardKing;
     board.b_pieces_[MakeCell('r')] ^= kBlackKingsideCastlingBitboardRook;
     board.b_black_ ^= kBlackKingsideCastlingBitboard;
     board.castling_ = board.castling_ & kCancelCastingBlack;
     if (t == MoveHandleType::kMake) {
-      board.hash_ ^= core_private::zobrist_castling[static_cast<int>(board.castling_)];
+      board.hash_ ^= core::zobrist_castling[static_cast<int>(board.castling_)];
     }
   }
 }
@@ -163,26 +163,26 @@ template<Color c, MoveHandleType t>
 inline void MakeQueensideCastling(Board& board) {
   if (c == Color::kWhite) {
     if (t == MoveHandleType::kMake) {
-      board.hash_ ^= core_private::zobrist_queenside_castling[static_cast<int>(Color::kWhite)];
-      board.hash_ ^= core_private::zobrist_castling[static_cast<int>(board.castling_)];
+      board.hash_ ^= core::zobrist_queenside_castling[static_cast<int>(Color::kWhite)];
+      board.hash_ ^= core::zobrist_castling[static_cast<int>(board.castling_)];
     }
     board.b_pieces_[MakeCell('K')] ^= kWhiteQueensideCastlingBitboardKing;
     board.b_pieces_[MakeCell('R')] ^= kWhiteQueensideCastlingBitboardRook;
     board.b_white_ ^= kWhiteQueensideCastlingBitboard;
     board.castling_ = board.castling_ & kCancelCastingWhite;
     if (t == MoveHandleType::kMake) {
-      board.hash_ ^= core_private::zobrist_castling[static_cast<int>(board.castling_)];
+      board.hash_ ^= core::zobrist_castling[static_cast<int>(board.castling_)];
     }
   } else {
     if (t == MoveHandleType::kMake) {
-      board.hash_ ^= core_private::zobrist_queenside_castling[static_cast<int>(Color::kBlack)];
+      board.hash_ ^= core::zobrist_queenside_castling[static_cast<int>(Color::kBlack)];
     }
     board.b_pieces_[MakeCell('k')] ^= kBlackQueensideCastlingBitboardKing;
     board.b_pieces_[MakeCell('r')] ^= kBlackQueensideCastlingBitboardRook;
     board.b_black_ ^= kBlackQueensideCastlingBitboard;
     board.castling_ = board.castling_ & kCancelCastingBlack;
     if (t == MoveHandleType::kMake) {
-      board.hash_ ^= core_private::zobrist_castling[static_cast<int>(board.castling_)];
+      board.hash_ ^= core::zobrist_castling[static_cast<int>(board.castling_)];
     }
   }
 }
@@ -193,7 +193,7 @@ InvertMove MakeMoveColor(Board& board, const Move& move) {
       {board.cells_[move.dst_], board.hash_, board.castling_, board.en_passant_coord_,
        board.move_counter_};
   if (board.en_passant_coord_ != kInvalidCoord) {
-    board.hash_^=core_private::zobrist_en_passant[board.en_passant_coord_];
+    board.hash_^=core::zobrist_en_passant[board.en_passant_coord_];
   }
   switch (move.type_) {
     case MoveType::kNull: {
@@ -299,9 +299,9 @@ InvertMove MakeMoveColor(Board& board, const Move& move) {
   }
   ChangeColor(board.move_side_);
   if (board.en_passant_coord_ != kInvalidCoord) {
-    board.hash_^=core_private::zobrist_en_passant[board.en_passant_coord_];
+    board.hash_^=core::zobrist_en_passant[board.en_passant_coord_];
   }
-  board.hash_ ^= core_private::zobrist_move_side;
+  board.hash_ ^= core::zobrist_move_side;
   board.b_all_ = board.b_white_ ^ board.b_black_;
   return invert_move;
 }

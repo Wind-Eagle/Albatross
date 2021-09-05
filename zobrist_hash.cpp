@@ -6,7 +6,7 @@ using core::Piece;
 using core::coord_t;
 using core::cell_t;
 
-namespace core_private {
+namespace core {
 
 hash_t zobrist_cells[kPiecesTypeCount][64];
 hash_t zobrist_en_passant[64];
@@ -34,17 +34,17 @@ void InitZobrist() {
   for (Color c : {Color::kWhite, Color::kBlack}) {
     const int index = static_cast<int>(c);
     const coord_t offset = (c == Color::kWhite) ? 0 : 56;
-    core_private::zobrist_queenside_castling[index] =
-        core_private::zobrist_cells[core::MakeCell(c, Piece::kKing)][offset + 4]
-            ^ core_private::zobrist_cells[core::MakeCell(c, Piece::kRook)][offset]
-            ^ core_private::zobrist_cells[core::MakeCell(c, Piece::kKing)][offset + 2]
-            ^ core_private::zobrist_cells[core::MakeCell(c, Piece::kRook)][offset + 3];
-    core_private::zobrist_kingside_castling[index] =
-        core_private::zobrist_cells[core::MakeCell(c, Piece::kKing)][offset + 4]
-            ^ core_private::zobrist_cells[core::MakeCell(c, Piece::kRook)][offset + 7]
-            ^ core_private::zobrist_cells[core::MakeCell(c, Piece::kKing)][offset + 6]
-            ^ core_private::zobrist_cells[core::MakeCell(c, Piece::kRook)][offset + 5];
+    core::zobrist_queenside_castling[index] =
+        core::zobrist_cells[core::MakeCell(c, Piece::kKing)][offset + 4]
+            ^ core::zobrist_cells[core::MakeCell(c, Piece::kRook)][offset]
+            ^ core::zobrist_cells[core::MakeCell(c, Piece::kKing)][offset + 2]
+            ^ core::zobrist_cells[core::MakeCell(c, Piece::kRook)][offset + 3];
+    core::zobrist_kingside_castling[index] =
+        core::zobrist_cells[core::MakeCell(c, Piece::kKing)][offset + 4]
+            ^ core::zobrist_cells[core::MakeCell(c, Piece::kRook)][offset + 7]
+            ^ core::zobrist_cells[core::MakeCell(c, Piece::kKing)][offset + 6]
+            ^ core::zobrist_cells[core::MakeCell(c, Piece::kRook)][offset + 5];
   }
 }
 
-}  // namespace core_private
+}  // namespace core
