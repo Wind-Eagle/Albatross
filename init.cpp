@@ -1,5 +1,6 @@
 #include "init.h"
 #include "movegen.h"
+#include "magic_bitboard.h"
 #include "zobrist_hash.h"
 #include <iostream>
 
@@ -7,8 +8,11 @@ namespace core {
   void InitParameters() {
     core::InitZobrist();
   }
+  void InitMagic() {
+    InitAllBitboards();
+  }
   void InitRules() {
-
+    InitMagic();
   }
   void SayHello() {
     std::cout << "Albatross Engine version (unknown)" << std::endl;

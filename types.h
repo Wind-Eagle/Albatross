@@ -3,6 +3,26 @@
 
 #include <cstdint>
 
+#define ENUM_TO_INT_OP(type, base, op)                                           \
+  inline constexpr type operator op(const type a, const type b) {                \
+    return static_cast<type>(static_cast<base>(a) op static_cast<base>(b));      \
+  }
+
+#define ENUM_ASSIGNMENT_OP(type, op)                                           \
+  inline constexpr type &operator op##=(type &a, const type b) { /* NOLINT */ \
+    a = a op b;                                                  /* NOLINT */ \
+    return a;                                                                 \
+  }
+
+#define ENUM_TO_INT(type, base)      \
+  ENUM_TO_INT_OP(type, base, &)      \
+  ENUM_TO_INT_OP(type, base, |)      \
+  ENUM_TO_INT_OP(type, base, ^)      \
+  ENUM_ASSIGNMENT_OP(type, &)      \
+  ENUM_ASSIGNMENT_OP(type, |)      \
+  ENUM_ASSIGNMENT_OP(type, ^)      \
+  inline constexpr type operator~(const type a) { return type::kAll ^ a; }
+
 namespace core {
 using coord_t = int8_t;
 using subcoord_t = int8_t;
@@ -18,17 +38,6 @@ enum class Castling : uint8_t {
   kBlackQueenSide = 8,
   kAll = 15
 };
-
-#define ENUM_TO_INT_OP(type, base, op)                                           \
-  inline constexpr type operator op(const type a, const type b) {                \
-    return static_cast<type>(static_cast<base>(a) op static_cast<base>(b));      \
-  }
-
-#define ENUM_TO_INT(type, base)      \
-  ENUM_TO_INT_OP(type, base, &)      \
-  ENUM_TO_INT_OP(type, base, |)      \
-  ENUM_TO_INT_OP(type, base, ^)      \
-  inline constexpr type operator~(const type a) { return type::kAll ^ a; }
 
 ENUM_TO_INT(Castling, uint8_t)
 
@@ -47,5 +56,18 @@ enum class Piece : int8_t {
 };
 
 }  // namespace core
+
+namespace search {
+  using score_t = int16_t;
+  enum class SearcherFlags : uint8_t {
+    kNone = 0,
+    kCapture = 1,
+    kNullMove = 2,
+    kNullMoveReduction = 4,
+    kLateMoveReduction = 8,
+    kAll = 15
+  };
+  ENUM_TO_INT(SearcherFlags, uint8_t)
+}  // namespace search
 
 #endif  // TYPES_H_

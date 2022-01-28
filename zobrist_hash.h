@@ -13,6 +13,7 @@ namespace core {
   extern hash_t zobrist_cells[kPiecesTypeCount][64];
   extern hash_t zobrist_en_passant[64];
   extern hash_t zobrist_castling[16];
+  extern hash_t zobrist_double_castling[256];
   extern hash_t zobrist_kingside_castling[2];
   extern hash_t zobrist_queenside_castling[2];
   extern hash_t zobrist_move_side;

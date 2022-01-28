@@ -11,6 +11,7 @@ namespace core {
 hash_t zobrist_cells[kPiecesTypeCount][64];
 hash_t zobrist_en_passant[64];
 hash_t zobrist_castling[16];
+hash_t zobrist_double_castling[256];
 hash_t zobrist_kingside_castling[2];
 hash_t zobrist_queenside_castling[2];
 hash_t zobrist_move_side;
@@ -30,6 +31,9 @@ void InitZobrist() {
   }
   for (int i = 1; i < 16; i++) {
     zobrist_castling[i] = core::GetRandom64();
+  }
+  for (int i = 0; i < 256; i++) {
+    zobrist_double_castling[i] = zobrist_castling[i >> 4] ^ zobrist_castling[i & 15];
   }
   for (Color c : {Color::kWhite, Color::kBlack}) {
     const int index = static_cast<int>(c);

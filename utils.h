@@ -35,29 +35,43 @@ inline void ChangeColor(Color& c) {
 }
 
 inline constexpr subcoord_t GetX(coord_t coord) {
-  return (coord & 7);
-}
-
-inline constexpr subcoord_t GetY(coord_t coord) {
   return (coord >> 3);
 }
 
+inline constexpr subcoord_t GetY(coord_t coord) {
+  return (coord & 7);
+}
+
 template<Color c>
-inline constexpr coord_t IncY(coord_t coord) {
+inline constexpr coord_t IncX(coord_t coord) {
   return (c == Color::kWhite) ? coord + 8 : coord - 8;
 }
 
 template<Color c>
-inline constexpr coord_t DecY(coord_t coord) {
+inline constexpr coord_t DecX(coord_t coord) {
   return (c == Color::kWhite) ? coord - 8 : coord + 8;
 }
 
+template<Color c>
+inline constexpr coord_t IncXDouble(coord_t coord) {
+  return (c == Color::kWhite) ? coord + 16 : coord - 16;
+}
+
+template<Color c>
+inline constexpr coord_t DecXDouble(coord_t coord) {
+  return (c == Color::kWhite) ? coord - 16 : coord + 16;
+}
+
+inline constexpr subcoord_t GetFirstLine(Color c) {
+  return (c == Color::kWhite) ? 0 : 7;
+}
+
 inline constexpr coord_t MakeCoord(subcoord_t x, subcoord_t y) {
-  return (y << 3) ^ x;
+  return (x << 3) ^ y;
 }
 
 inline coord_t MakeCoord(std::string coord) {
-  return MakeCoord(coord[0] - 'a', coord[1] - '1');
+  return MakeCoord(coord[1] - '1', coord[0] - 'a');
 }
 
 inline constexpr bool IsCoordPairValid(subcoord_t x, subcoord_t y) {
@@ -129,7 +143,7 @@ inline constexpr bool CheckCellValidness(cell_t piece) {
   return piece < kPiecesTypeCount && piece != kInvalidCell && piece != kColorOffset;
 }
 
-inline void PrintBitBoard(bitboard_t bitboard) {
+inline void PrintBitboard(bitboard_t bitboard) {
   for (subcoord_t i = 0; i < 8; i++) {
     for (subcoord_t j = 0; j < 8; j++) {
       std::cout << (((bitboard & (1ULL << ((i << 3) + j))) == 0) ? 0 : 1);

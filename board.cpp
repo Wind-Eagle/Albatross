@@ -59,7 +59,7 @@ BoardValidness Board::CheckValidness() const {
     return BoardValidness::kInvalidBb;
   }
   if (en_passant_coord_ != kInvalidCoord) {
-    if (GetY(en_passant_coord_) < 3 || GetY(en_passant_coord_) > 4) {
+    if (GetX(en_passant_coord_) < 3 || GetX(en_passant_coord_) > 4) {
       return BoardValidness::kInvalidEnPassant;
     }
   }
@@ -172,8 +172,8 @@ std::string Board::GetBoardValidness(BoardValidness id) {
 void Board::SetFen(std::string fen) {
   Clear();
   std::vector<std::string> parsed_fen = ParseLine(fen);
-  int pos_x = 0;
-  int pos_y = 7;
+  subcoord_t pos_x = 0;
+  subcoord_t pos_y = 7;
   for (auto i: parsed_fen[0]) {
     if (i == '/') {
       // TODO(Wind-Eagle): make some kind of errors when position/FEN is illegal:
@@ -183,7 +183,7 @@ void Board::SetFen(std::string fen) {
     if (i >= '0' && i <= '9') {
       pos_x += (i - '0');
     } else {
-      cells_[MakeCoord(pos_x, pos_y)] = MakeCell(i);
+      cells_[MakeCoord(pos_y, pos_x)] = MakeCell(i);
       pos_x++;
     }
     if (pos_x == 8) {
