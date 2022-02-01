@@ -86,6 +86,14 @@ inline constexpr Color GetCellColor(cell_t piece) {
   return piece < kColorOffset ? Color::kWhite : Color::kBlack;
 }
 
+inline constexpr cell_t GetCellUncolored(cell_t cell) {
+  if (cell >= ColorOffset(Color::kBlack)) {
+    return cell - ColorOffset(Color::kBlack);
+  } else {
+    return cell;
+  }
+}
+
 inline constexpr cell_t MakeCell(Color color, Piece piece) {
   return ColorOffset(color) + static_cast<int>(piece);
 }

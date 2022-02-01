@@ -12,7 +12,9 @@ namespace search {
 class SearchLauncher {
  public:
   ~SearchLauncher() {
-    main_thread_.join();
+    if (main_thread_.joinable()) {
+      main_thread_.join();
+    }
   }
   inline void Stop();
   inline void Join();

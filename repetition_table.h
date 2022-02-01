@@ -8,8 +8,14 @@
 class RepetitionTable {
  public:
   RepetitionTable() : table_(new core::hash_t[(1 << kInitialSize) * kBucketSize]) {
+    for (size_t i = 0; i < (1 << kInitialSize) * kBucketSize; i++) {
+      table_[i] = 0;
+    }
     size_ = kInitialSize;
     mask_ = ((1 << kInitialSize) - 1) * kBucketSize;
+  }
+  ~RepetitionTable() {
+    table_ = nullptr;
   }
   inline bool IsRepetition(core::hash_t hash) {
     const size_t idx = hash & mask_;
@@ -24,6 +30,7 @@ class RepetitionTable {
     if (IsRepetition(hash)) {
       return false;
     }
+    ko_++;
     for (;;) {
       const size_t idx = hash & mask_;
       for (uint64_t i = 0; i < kBucketSize; i++) {
@@ -36,6 +43,7 @@ class RepetitionTable {
     }
   }
   inline void EraseRepetition(core::hash_t hash) {
+    ko_++;
     const size_t idx = hash & mask_;
     for (uint64_t i = 0; i < kBucketSize; i++) {
       if (table_[idx + i] == hash) {
@@ -46,9 +54,12 @@ class RepetitionTable {
   }
  private:
   void grow() {
-    size_t new_size_ = kInitialSize * 2;
+    size_t new_size_ = size_ + 1;
     uint64_t new_mask_ = ((1 << new_size_) - 1) * kBucketSize;
     std::unique_ptr<core::hash_t[]> new_table_(new core::hash_t[(1 << new_size_) * kBucketSize]);
+    for (size_t i = 0; i < (1 << new_size_) * kBucketSize; i++) {
+      new_table_[i] = 0;
+    }
     for (uint64_t i = 0; i < size_ * kBucketSize; i++) {
       core::hash_t cur = table_[i];
       if (cur == 0) {
@@ -58,6 +69,7 @@ class RepetitionTable {
       for (uint64_t j = 0; j < kBucketSize; j++) {
         if (new_table_[idx + j] == 0) {
           new_table_[idx + j] = cur;
+          break;
         }
       }
     }
@@ -68,6 +80,7 @@ class RepetitionTable {
   std::unique_ptr<core::hash_t[]> table_;
   size_t size_;
   uint64_t mask_;
+  uint64_t ko_ = 0;
 
   static constexpr uint64_t kInitialSize = 10;
   static constexpr uint64_t kBucketSize = 4;

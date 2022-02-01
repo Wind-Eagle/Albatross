@@ -2,8 +2,10 @@
 #include "board.h"
 #include "move.h"
 #include "movegen.h"
+#include "move_picker.h"
 #include "utils.h"
 #include "search_launcher.h"
+#include "evaluation.h"
 #include <iostream>
 #include <string>
 
@@ -70,11 +72,15 @@ void ParsePosition(core::Board& board, const std::vector<std::string>& command, 
   offset++;
   if (position == "startpos") {
     board.SetStartPos();
-  } else {
-    for (int i = 0; i < 5; i++) {
-      position += " " + command[offset + i];
+  } else if (position == "fen") {
+    position = "";
+    for (int i = 0; i < 6; i++) {
+      position += command[offset + i];
+      if (i != 5) {
+        position += " ";
+      }
     }
-    offset += 5;
+    offset += 6;
     board.SetFen(position);
   }
 }
@@ -162,54 +168,55 @@ void HandlePositionMoves(const std::vector<std::string>& command) {
   PrintBoardsComparasion(old_board, board);
 }
 
-void HandleDebug([[maybe_unused]]core::Board& board,
-                 [[maybe_unused]]const std::vector<std::string>& command) {
-  if (command.size() <= 2) {
+void HandleGo(core::Board& board, search::SearchLauncher& search_launcher, const std::vector<std::string>& command) {
+  int milliseconds_count = (1LL << 31) - 1;
+  bool fixed_time = true;
+  int wtime = 0, winc = 0, btime = 0, binc = 0;
+  if (command.size() <= 1) {
     return;
   }
-  if (command[2] == "position") {
-    if (command[3] == "checkmoves") {
-      HandlePositionMoves(command);
-    } else if (command[3] == "checkposition") {
-      HandlePositionCheck(command);
-    } else if (command[3] == "compareposition") {
-      HandlePositionCompare(command);
+  if (command[1] == "movetime") {
+    if (command.size() <= 2) {
+      return;
     }
-  }
-  if (command[2] == "getmoves") {
-    board.SetFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
-    core::Move* moves = new core::Move[300];
-    size_t size = core::GenerateAllMoves<Color::kWhite>(board, moves);
-    std::cout<<size<<std::endl;
-    for (size_t i=0; i<size; i++) {
-      std::cout<<core::MoveToString(moves[i])<<std::endl;
-    }
-  }
-  if (command[2] == "heatmap") {
-    board.SetFen("1rb2rk1/1p3p1p/pN2pb2/4N2q/3PB1p1/1Q4Pn/PP3PKP/R2R4 w - - 0 21");
-    core::bitboard_t heatmap = 0;
-    for (core::coord_t i = 24; i < 32; i++) {
-      if (core::IsCellAttacked<Color::kBlack>(board, i)) {
-        heatmap ^= (1ULL << i);
+    milliseconds_count = stoi(command[2]);
+  } else if (command[1] == "infinite") {
+    milliseconds_count = (1LL << 31) - 1;
+  } else if (command.size() >= 3) {
+    fixed_time = false;
+    for (size_t i = 2; i < command.size(); i += 2) {
+      if (command[i] == "wtime") {
+        wtime = stoi(command[i + 1]);
+      }
+      if (command[i] == "winc") {
+        winc = stoi(command[i + 1]);
+      }
+      if (command[i] == "btime") {
+        btime = stoi(command[i + 1]);
+      }
+      if (command[i] == "binc") {
+        binc = stoi(command[i + 1]);
       }
     }
-    core::PrintBitboard(heatmap);
   }
-}
-
-void HandleAnalyze([[maybe_unused]]core::Board& board,
-                   [[maybe_unused]]const std::vector<std::string>& command) {
-
-}
-
-void HandleGo(core::Board& board, search::SearchLauncher& search_launcher, [[maybe_unused]]const std::vector<std::string>& command) {
-  board.SetStartPos();
+  if (!fixed_time) {
+    if (board.move_side_ == core::Color::kWhite) {
+      milliseconds_count = wtime / std::max(5, 20 - board.move_number_ / 10)  + winc;
+    } else {
+      milliseconds_count = btime / std::max(5, 20 - board.move_number_ / 10)  + binc;
+    }
+  }
   std::vector<core::Move> moves;
-  search_launcher.Start(board, moves, std::chrono::milliseconds(5000));
+  search_launcher.Start(board, moves, std::chrono::milliseconds(milliseconds_count));
+}
+
+void HandleCost([[maybe_unused]]core::Board& board) {
+
 }
 
 void StartUciInteraction() {
   core::Board board;
+  board.SetStartPos();
   search::SearchLauncher search_launcher;
   while (true) {
     std::string command;
@@ -218,16 +225,7 @@ void StartUciInteraction() {
       continue;
     }
     std::vector<std::string> parsed_command = core::ParseLine(command);
-    if (parsed_command[0] == "cmd") {
-      if (parsed_command.size() == 1) {
-        continue;
-      }
-      if (parsed_command[1] == "debug") {
-        HandleDebug(board, parsed_command);
-      } else if (parsed_command[1] == "analyze") {
-        HandleAnalyze(board, parsed_command);
-      }
-    } else if (parsed_command[0] == "uci") {
+    if (parsed_command[0] == "uci") {
       uci::UciStart();
     } else if (parsed_command[0] == "isready") {
       uci::UciReady();
@@ -235,6 +233,8 @@ void StartUciInteraction() {
       HandlePosition(board, parsed_command);
     } else if (parsed_command[0] == "go") {
       HandleGo(board, search_launcher, parsed_command);
+    } else if (parsed_command[0] == "cost") {
+      HandleCost(board);
     } else if (parsed_command[0] == "quit") {
       break;
     }

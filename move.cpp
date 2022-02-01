@@ -229,6 +229,7 @@ inline void MakeKingsideCastling(Board& board) {
   } else {
     if constexpr (t == MoveHandleType::kMake) {
       board.hash_ ^= core::zobrist_kingside_castling[static_cast<int8_t>(Color::kBlack)];
+      board.hash_ ^= core::zobrist_castling[static_cast<uint8_t>(board.castling_)];
       board.castling_ = board.castling_ & kCancelCastingBlack;
     }
     board.b_pieces_[MakeCell('k')] ^= kBlackKingsideCastlingBitboardKing;
@@ -257,6 +258,7 @@ inline void MakeQueensideCastling(Board& board) {
   } else {
     if constexpr (t == MoveHandleType::kMake) {
       board.hash_ ^= core::zobrist_queenside_castling[static_cast<int8_t>(Color::kBlack)];
+      board.hash_ ^= core::zobrist_castling[static_cast<uint8_t>(board.castling_)];
       board.castling_ = board.castling_ & kCancelCastingBlack;
     }
     board.b_pieces_[MakeCell('k')] ^= kBlackQueensideCastlingBitboardKing;
@@ -539,7 +541,7 @@ std::string MoveToString(const Move& move) {
   return answer;
 }
 
-Move StringToMove(Board& board, const std::string& str) {
+Move StringToMove(const Board& board, const std::string& str) {
   MoveType type = MoveType::kSimple;
   coord_t src = StringToCoord(str.substr(0, 2));
   coord_t dst = StringToCoord(str.substr(2, 2));

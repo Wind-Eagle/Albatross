@@ -52,6 +52,15 @@ struct Board {
     return b_pieces_[c];
   }
 
+  template<Color c>
+  inline constexpr coord_t GetKingPosition() const {
+    if constexpr (c == Color::kWhite) {
+      return GetLowest(b_pieces_[MakeCell('K')]);
+    } else {
+      return GetLowest(b_pieces_[MakeCell('k')]);
+    }
+  }
+
   void SetFen(std::string fen);
   void SetStartPos() {
     SetFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");

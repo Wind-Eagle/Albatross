@@ -7,7 +7,7 @@ inline constexpr int32_t TranspositionTable::Data::GetWeight(const uint8_t epoch
   }
   const uint8_t age = epoch - epoch_;
   int32_t result = 4 * GetDepth() - age;
-  if ((flags_ & 3) == kExact) {
+  if ((flags_ & 7) == kExact) {
     result += 6;
   }
   if (move_.type_ == core::MoveType::kNull) {
@@ -20,9 +20,10 @@ inline constexpr int32_t TranspositionTable::Data::GetWeight(const uint8_t epoch
 }
 void TranspositionTable::AddData(core::hash_t hash, Data data) {
   const int idx = hash & (size_ - 1);
+  const uint8_t epoch = epoch_;
   Entry& entry = table_[idx];
-  data.epoch_ = epoch_;
-  if (entry.data_.load(std::memory_order_relaxed).GetWeight(epoch_) > data.GetWeight(epoch_)) {
+  data.epoch_ = epoch;
+  if (entry.data_.load(std::memory_order_relaxed).GetWeight(epoch) > data.GetWeight(epoch)) {
     return;
   }
   hash ^= data.GetAs64();
@@ -38,9 +39,6 @@ TranspositionTable::Data TranspositionTable::GetData(core::hash_t hash) const {
     return Data::GetEmpty();
   }
   return data;
-}
-void TranspositionTable::Prefetch() {
-
 }
 
 }  // namespace search

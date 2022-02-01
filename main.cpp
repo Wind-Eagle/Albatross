@@ -4,6 +4,7 @@
 int main() {
   core::InitParameters();
   core::InitRules();
+  core::InitEvaluation();
   core::SayHello();
   uci::StartUciInteraction();
 }

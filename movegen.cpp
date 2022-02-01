@@ -65,10 +65,10 @@ inline static bitboard_t MoveAllPawns(bitboard_t pawns) {
 template<Color c, bool p>
 inline static void AddPawnMoves(coord_t src, coord_t dst, Move* list, size_t& size) {
   if (p) {
-    list[size++] = Move{MoveType::kKnightPromotion, src, dst, 0};
-    list[size++] = Move{MoveType::kBishopPromotion, src, dst, 0};
-    list[size++] = Move{MoveType::kRookPromotion, src, dst, 0};
     list[size++] = Move{MoveType::kQueenPromotion, src, dst, 0};
+    list[size++] = Move{MoveType::kKnightPromotion, src, dst, 0};
+    list[size++] = Move{MoveType::kRookPromotion, src, dst, 0};
+    list[size++] = Move{MoveType::kBishopPromotion, src, dst, 0};
   } else {
     list[size++] = Move{MoveType::kSimple, src, dst, 0};
   }
@@ -227,8 +227,8 @@ bool IsCellAttacked(const Board& board, coord_t src) {
       return true;
     }
   }
-  if (board.b_pieces_[MakeCell(c, Piece::kKnight)] & kKnightMoves[src] ||
-      board.b_pieces_[MakeCell(c, Piece::kKing)] & kKingMoves[src]) {
+  if ((board.b_pieces_[MakeCell(c, Piece::kKnight)] & kKnightMoves[src]) ||
+      (board.b_pieces_[MakeCell(c, Piece::kKing)] & kKingMoves[src])) {
     return true;
   }
   return ((GetBishopMoves(board.b_all_, src) & GetDiagPieces<c>(board))
@@ -263,6 +263,45 @@ inline static size_t GenerateCastling(const Board& board, Move* list) {
 }
 
 template<Color c>
+size_t GenerateAllCaptures(const Board& board, Move* list) {
+  size_t size = 0;
+  size += GeneratePawnCapture<c>(board, list + size);
+  size += GeneratePawnEnPassant<c>(board, list + size);
+  size += GenerateKnightOrKing<c, Piece::kKnight, MoveGenType::kCapture>(board, list + size);
+  size += GenerateKnightOrKing<c, Piece::kKing, MoveGenType::kCapture>(board, list + size);
+  size += GenerateBishopOrRook<c, Piece::kBishop, MoveGenType::kCapture>(board,
+                                                                     list + size,
+                                                                     GetDiagPieces<c>(board));
+  size += GenerateBishopOrRook<c, Piece::kRook, MoveGenType::kCapture>(board,
+                                                                   list + size,
+                                                                   GetLinePieces<c>(board));
+  return size;
+}
+
+template<Color c>
+size_t GenerateAllSimplePromotions(const Board& board, Move* list) {
+  size_t size = 0;
+  size += GeneratePawnSimple<c, PromotionPolicy::kPromotion>(board, list);
+  return size;
+}
+
+template<Color c>
+size_t GenerateAllSimpleMoves(const Board& board, Move* list) {
+  size_t size = 0;
+  size += GeneratePawnSimple<c, PromotionPolicy::kNone>(board, list);
+  size += GenerateKnightOrKing<c, Piece::kKnight, MoveGenType::kSimple>(board, list + size);
+  size += GenerateKnightOrKing<c, Piece::kKing, MoveGenType::kSimple>(board, list + size);
+  size += GenerateBishopOrRook<c, Piece::kBishop, MoveGenType::kSimple>(board,
+                                                                     list + size,
+                                                                     GetDiagPieces<c>(board));
+  size += GenerateBishopOrRook<c, Piece::kRook, MoveGenType::kSimple>(board,
+                                                                   list + size,
+                                                                   GetLinePieces<c>(board));
+  size += GenerateCastling<c>(board, list + size);
+  return size;
+}
+
+template<Color c>
 size_t GenerateAllMoves(const Board& board, Move* list) {
   size_t size = 0;
   size += GeneratePawnSimple<c, PromotionPolicy::kAll>(board, list);
@@ -280,6 +319,95 @@ size_t GenerateAllMoves(const Board& board, Move* list) {
   return size;
 }
 
+template<Color c>
+bool IsMoveValidColor(const Board& board, const Move& move) {
+  if (move.type_ == MoveType::kNull || move.type_ == MoveType::kInvalid) {
+    return false;
+  }
+  constexpr coord_t castling_offset = (c == Color::kWhite ? 0 : 56);
+  if (move.type_ == MoveType::kKingsideCastling) {
+    const bitboard_t castling_bitboard = (kCastlingKingsideBitboard << castling_offset);
+    return board.IsKingsideCastling(c) && (!(castling_bitboard & board.b_all_)) && (!IsCellAttacked<
+        GetInvertedColor(c)>(board, move.src_)) && (!IsCellAttacked<
+        GetInvertedColor(c)>(board, move.src_ + 1));
+  }
+  if (move.type_ == MoveType::kQueensideCastling) {
+    const bitboard_t castling_bitboard = (kCastlingQueensideBitboard << castling_offset);
+    return board.IsQueensideCastling(c) && !(castling_bitboard & board.b_all_) && !IsCellAttacked<
+        GetInvertedColor(c)>(board, move.src_) && !IsCellAttacked<
+        GetInvertedColor(c)>(board, move.src_ - 1);
+  }
+  if (board.cells_[move.src_] == MakeCell(c, Piece::kPawn)) {
+    if (move.type_ == MoveType::kPawnDouble) {
+      const bitboard_t bb_must_empty = (1ULL << IncXDouble<c>(move.src_)) ^ (1ULL << IncX<c>(move.src_));
+      return !(board.b_all_ & bb_must_empty);
+    }
+    if (move.type_ == MoveType::kEnPassant) {
+      coord_t en_passant = board.en_passant_coord_;
+      if (en_passant == kInvalidCoord) {
+        return false;
+      }
+      DecX<c>(en_passant);
+      return (move.src_ - 1 == en_passant || move.src_ + 1 == en_passant) && (move.dst_ == en_passant);
+    }
+    if (move.type_ == MoveType::kKnightPromotion || move.type_ == MoveType::kBishopPromotion || move.type_ == MoveType::kRookPromotion || move.type_ == MoveType::kQueenPromotion) {
+      if (GetX(move.src_) != GetPromotionLine(c)) {
+        return false;
+      }
+    }
+    if (board.cells_[move.dst_] == kEmptyCell) {
+      return move.dst_ == IncX<c>(move.src_);
+    }
+    if (GetCellColor(board.cells_[move.dst_]) != c) {
+      if constexpr (c == Color::kWhite) {
+        return kWhitePawnReversedAttacks[move.dst_] & (1ULL << move.src_);
+      } else {
+        return kBlackPawnReversedAttacks[move.dst_] & (1ULL << move.src_);
+      }
+    }
+    return false;
+  }
+  if (move.type_ != MoveType::kSimple) {
+    return false;
+  }
+  bitboard_t bb_dst = (1ULL << move.dst_);
+  if constexpr (c == Color::kWhite) {
+    if (bb_dst & board.b_white_) {
+      return false;
+    }
+  } else {
+    if (bb_dst & board.b_black_) {
+      return false;
+    }
+  }
+  if (board.cells_[move.src_] == MakeCell(c, Piece::kKing)) {
+    return kKingMoves[move.src_] & bb_dst;
+  }
+  if (board.cells_[move.src_] == MakeCell(c, Piece::kKnight)) {
+    return kKnightMoves[move.src_] & bb_dst;
+  }
+  //TODO(Wind-Eagle): optimize these 3 ifs
+  if (board.cells_[move.src_] == MakeCell(c, Piece::kBishop)) {
+    return GetBishopMoves(board.b_all_, move.src_) & bb_dst;
+  }
+  if (board.cells_[move.src_] == MakeCell(c, Piece::kRook)) {
+    return GetRookMoves(board.b_all_, move.src_) & bb_dst;
+  }
+  if (board.cells_[move.src_] == MakeCell(c, Piece::kQueen)) {
+    return ((GetBishopMoves(board.b_all_, move.src_) & bb_dst) ||
+        (GetRookMoves(board.b_all_, move.src_) & bb_dst));
+  }
+  return false;
+}
+
+template bool IsMoveValidColor<Color::kWhite>(const Board& board, const Move& move);
+template bool IsMoveValidColor<Color::kBlack>(const Board& board, const Move& move);
+template size_t GenerateAllCaptures<Color::kWhite>(const Board& board, Move* list);
+template size_t GenerateAllCaptures<Color::kBlack>(const Board& board, Move* list);
+template size_t GenerateAllSimplePromotions<Color::kWhite>(const Board& board, Move* list);
+template size_t GenerateAllSimplePromotions<Color::kBlack>(const Board& board, Move* list);
+template size_t GenerateAllSimpleMoves<Color::kWhite>(const Board& board, Move* list);
+template size_t GenerateAllSimpleMoves<Color::kBlack>(const Board& board, Move* list);
 template size_t GenerateAllMoves<Color::kWhite>(const Board& board, Move* list);
 template size_t GenerateAllMoves<Color::kBlack>(const Board& board, Move* list);
 template bool IsCellAttacked<Color::kWhite>(const Board& board, coord_t src);

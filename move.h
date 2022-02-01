@@ -17,7 +17,8 @@ enum class MoveType : uint8_t {
   kRookPromotion,
   kQueenPromotion,
   kKingsideCastling,
-  kQueensideCastling
+  kQueensideCastling,
+  kInvalid
 };
 
 enum class MoveHandleType : uint8_t {
@@ -36,8 +37,14 @@ struct Move {
   Move(MoveType type, coord_t src, coord_t dst, uint8_t info) : type_(type), src_(src), dst_(dst), info_(info) {
 
   }
+  bool operator == (const Move& rhs) {
+    return src_ == rhs.src_ && dst_ == rhs.dst_;
+  }
   static Move GetEmptyMove() {
     return Move(MoveType::kNull, 0, 0, 0);
+  }
+  static Move GetInvalidMove() {
+    return Move(MoveType::kInvalid, 0, 0, 0);
   }
   inline constexpr uint32_t GetAs32() const {
     const auto uintKind = static_cast<uint8_t>(type_);
@@ -59,7 +66,7 @@ InvertMove MakeMove(Board& board, const Move& move);
 void UnmakeMove(Board& board, const Move& move, const InvertMove& inverted_move);
 
 std::string MoveToString(const Move& move);
-Move StringToMove(Board& board, const std::string& str);
+Move StringToMove(const Board& board, const std::string& str);
 
 }  // namespace core
 

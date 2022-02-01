@@ -2,6 +2,7 @@
 #define CONSTANTS_H_
 
 #include <cstdint>
+#include <cstddef>
 #include "types.h"
 
 namespace core {
@@ -23,7 +24,12 @@ constexpr bitboard_t kBitboardFrame = kBitboardRows[0] | kBitboardRows[7] | kBit
 }  // namespace core
 
 namespace search {
-constexpr score_t kScoreMax = 300;
+constexpr score_t kScoreMax = 30000;
+constexpr size_t kMaxCaptures = 100;
+constexpr size_t kMaxMoves = 300;
+constexpr score_t kAlmostMate = 24999;
+constexpr score_t kMate = 29999;
+constexpr score_t kStalemate = 0;
 
 }  // namespace search
 
