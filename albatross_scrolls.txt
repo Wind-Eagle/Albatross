@@ -1,0 +1,3 @@
+Countermove heuristics seem a little nit useless. Albatross doesn't haven any improvement from it yet.
+
+An idea not to store a move in history table when depth is <= threashold is interesting. It should be implemented with NegaScout.

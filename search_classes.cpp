@@ -1,6 +1,7 @@
 #include "search_classes.h"
 #include "repetition_table.h"
 #include "searcher.h"
+#include "dynamic_evaluator.h"
 
 namespace search {
 std::vector<core::Move> GetPV(core::Board board, core::Move move, TranspositionTable& tt) {
@@ -38,7 +39,8 @@ void SearchThread::Run(const core::Board& start_board,
     }
     MakeMove(board, i);
   }
-  Searcher searcher(board, table_, communicator_, stats_, second, time, id_);
+  evaluation::DEval d_eval(board);
+  Searcher searcher(board, d_eval, table_, communicator_, stats_, second, time, id_);
   for (uint8_t depth = 1; depth <= 250; depth++) {
     core::Move best_move = core::Move::GetEmptyMove();
     score_t score = searcher.Run(depth, best_move);
@@ -47,6 +49,7 @@ void SearchThread::Run(const core::Board& start_board,
     }
     if (communicator_.IsDepthNotFinished(depth)) {
       stats_.SetBestMove(depth, best_move);
+      searcher.SetPrevScore(score);
       write_lock_.lock();
       auto end_time = std::chrono::steady_clock::now();
       std::vector<core::Move> pv = GetPV(board, best_move, table_);

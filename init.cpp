@@ -19,11 +19,11 @@ namespace core {
     evaluation::InitEvaluation();
   }
   void SayHello() {
-    std::cout << "Albatross Engine version 0.0.1 (alpha)" << std::endl;
+    std::cout << "Albatross Engine version 0.0.2 (alpha)" << std::endl;
     std::cout << "Chess engine by Wind_Eagle" << std::endl;
     std::cout << "Current state: "<<std::endl;
-    std::cout << "1) working on the countermove and history heuristics" << std::endl;
-    std::cout << "2) working on the dynamic position cost recalc" << std::endl;
+    std::cout << "1) working on AEL-pruning" << std::endl;
+    std::cout << "2) working on tapered eval" << std::endl;
     std::cout << "SoFCheck <3" << std::endl;
   }
 
