@@ -30,40 +30,8 @@ class Searcher {
   enum class NodeKind {kRoot, kPV, kSimple};
   inline score_t Run(uint8_t depth, core::Move& best_move) {
     depth_ = depth;
-    if (depth == 1) {
-      score_t score = MainSearch<NodeKind::kRoot>(depth, 0, -kScoreMax, kScoreMax, d_eval_, SearcherFlags::kNone);
-      best_move = best_move_depth_[0];
-      return score;
-    }
-    score_t aspiration = 50;
-    score_t alpha = prev_score_ - aspiration;
-    score_t beta = prev_score_ + aspiration;
-    score_t score = 0;
-    while (true) {
-      score = MainSearch<NodeKind::kRoot>(depth, 0, -kScoreMax, kScoreMax, d_eval_, SearcherFlags::kNone);
-      best_move = best_move_depth_[0];
-      if (aspiration >= 400 || best_move.type_ == core::MoveType::kNull) {
-        score = MainSearch<NodeKind::kRoot>(depth,
-                                            0,
-                                            -kScoreMax,
-                                            kScoreMax,
-                                            d_eval_,
-                                            SearcherFlags::kNone);
-        best_move = best_move_depth_[0];
-        break;
-      }
-      if (alpha < score && score < beta) {
-        break;
-      }
-      if (score <= alpha) {
-        aspiration *= 2;
-        alpha = prev_score_ - aspiration;
-      }
-      if (score >= beta) {
-        aspiration *= 2;
-        beta = prev_score_ + aspiration;
-      }
-    }
+    score_t score = MainSearch<NodeKind::kRoot>(depth, 0, -kScoreMax, kScoreMax, d_eval_, SearcherFlags::kNone);
+    best_move = best_move_depth_[0];
     return score;
   }
   void SetPrevScore(score_t score) {

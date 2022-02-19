@@ -19,10 +19,6 @@ void InitEvaluation() {
 }
 
 search::score_t Evaluate(const core::Board& board, DEval d_eval) {
-  /*search::score_t score = 0;
-  for (core::coord_t i = 0; i < 64; i++) {
-    score += kPSQ[board.cells_[i]][i];
-  }*/
   search::score_t score = d_eval.GetScore();
   if (board.b_pieces_[core::MakeCell('q')] == 0) {
     score -= kPSQ[core::MakeCell('K')][board.GetKingPosition<core::Color::kWhite>()];
