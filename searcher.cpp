@@ -88,12 +88,36 @@ void Searcher::HistoryStore(const core::Move& move, int32_t depth) {
 }
 
 template<Searcher::NodeKind nt>
+static bool CanPerformNullMove(core::Board& board, int32_t depth) {
+  return (nt == Searcher::NodeKind::kSimple && depth >= kNullMoveDepthThreshold && !core::IsKingAttacked(board));
+}
+
+template<Searcher::NodeKind nt>
 inline score_t Searcher::MainSearch(int32_t depth, size_t idepth, score_t alpha, score_t beta, evaluation::DEval d_eval, SearcherFlags flags) {
   if (depth <= 0) {
     return QuiescenseSearch(alpha, beta, d_eval);
   }
   stats_.IncNodes();
   best_move_depth_[idepth] = core::Move::GetEmptyMove();
+
+  if (CanPerformNullMove<nt>(board_, depth)) {
+    core::InvertMove move_data = core::MakeMove(board_, core::Move::GetEmptyMove());
+    score_t score = -Search<NodeKind::kSimple>(depth - kNullMoveR - 1, idepth + 1, -beta, -beta + 1, d_eval, flags);
+    core::UnmakeMove(board_, core::Move::GetEmptyMove(), move_data);
+    if (score >= beta) {
+      return beta;
+    }
+    if (MustStop()) {
+      return 0;
+    }
+  }
+
+  if (nt == NodeKind::kSimple && (!core::IsKingAttacked(board_)) && std::abs(alpha) < kAlmostMate && std::abs(beta) < kAlmostMate && depth <= kFutilityDepthThreshold) {
+    score_t eval_score = evaluation::Evaluate(board_, d_eval);
+    if (eval_score >= beta + kFutilityMargin[depth]) {
+      return beta;
+    }
+  }
 
   score_t first_alpha = alpha;
   score_t first_beta = beta;

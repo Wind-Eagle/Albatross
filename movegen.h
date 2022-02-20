@@ -33,6 +33,9 @@ bool IsCellAttacked(const Board& board, coord_t src);
 template<Color c>
 bool IsMoveValidColor(const Board& board, const Move& move);
 
+bool IsKingAttacked(const Board &board);
+bool IsOpponentKingAttacked(const Board &board);
+
 inline bool IsMoveValid(const Board& board, const Move& move) {
   if (board.move_side_ == Color::kWhite) {
     return IsMoveValidColor<Color::kWhite>(board, move);

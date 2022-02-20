@@ -400,6 +400,20 @@ bool IsMoveValidColor(const Board& board, const Move& move) {
   return false;
 }
 
+bool IsKingAttacked(const Board &board) {
+  if (board.move_side_ == Color::kWhite) {
+    return core::IsCellAttacked<Color::kBlack>(board, core::GetLowest(board.b_pieces_[MakeCell(Color::kWhite, Piece::kKing)]));
+  }
+  return core::IsCellAttacked<Color::kWhite>(board, core::GetLowest(board.b_pieces_[MakeCell(Color::kBlack, Piece::kKing)]));
+}
+
+bool IsOpponentKingAttacked(const Board &board) {
+  if (board.move_side_ == Color::kBlack) {
+    return core::IsCellAttacked<Color::kBlack>(board, core::GetLowest(board.b_pieces_[MakeCell(Color::kWhite, Piece::kKing)]));
+  }
+  return core::IsCellAttacked<Color::kWhite>(board, core::GetLowest(board.b_pieces_[MakeCell(Color::kBlack, Piece::kKing)]));
+}
+
 template bool IsMoveValidColor<Color::kWhite>(const Board& board, const Move& move);
 template bool IsMoveValidColor<Color::kBlack>(const Board& board, const Move& move);
 template size_t GenerateAllCaptures<Color::kWhite>(const Board& board, Move* list);

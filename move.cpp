@@ -302,6 +302,7 @@ InvertMove MakeMoveColor(Board& board, const Move& move) {
       break;
     }
     case MoveType::kNull: {
+      board.en_passant_coord_ = kInvalidCoord;
       break;
     }
     case MoveType::kEnPassant: {
