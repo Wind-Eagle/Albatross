@@ -21,9 +21,11 @@ bool Searcher::MustStop() const {
 
 static bool IsMoveLegal(const core::Board& board) {
   if (board.move_side_ == core::Color::kWhite) {
-    return !core::IsCellAttacked<core::Color::kWhite>(board, board.GetKingPosition<core::Color::kBlack>());
+    return !core::IsCellAttacked<core::Color::kWhite>(board,
+                                                      board.GetKingPosition<core::Color::kBlack>());
   } else {
-    return !core::IsCellAttacked<core::Color::kBlack>(board, board.GetKingPosition<core::Color::kWhite>());
+    return !core::IsCellAttacked<core::Color::kBlack>(board,
+                                                      board.GetKingPosition<core::Color::kWhite>());
   }
 }
 
@@ -35,7 +37,8 @@ score_t Searcher::QuiescenseSearch(score_t alpha, score_t beta, evaluation::DEva
     return beta;
   }
   QuiescenseMovePicker move_picker(board_);
-  for (core::Move move = move_picker.GetMove(); move.type_ != core::MoveType::kInvalid; move = move_picker.GetMove()) {
+  for (core::Move move = move_picker.GetMove(); move.type_ != core::MoveType::kInvalid;
+       move = move_picker.GetMove()) {
     evaluation::DEval new_eval = d_eval;
     new_eval.UpdateTag(board_, move);
     core::InvertMove move_data = core::MakeMove(board_, move);
@@ -68,7 +71,12 @@ inline static score_t AdjustCheckmate(score_t score, size_t idepth) {
 }
 
 template<Searcher::NodeKind nt>
-inline score_t Searcher::Search(int32_t depth, size_t idepth, score_t alpha, score_t beta, evaluation::DEval d_eval, SearcherFlags flags) {
+inline score_t Searcher::Search(int32_t depth,
+                                size_t idepth,
+                                score_t alpha,
+                                score_t beta,
+                                evaluation::DEval d_eval,
+                                SearcherFlags flags) {
   tt_.Prefetch(board_.hash_);
   if (!repetitions_.InsertRepetition(board_.hash_)) {
     return 0;
@@ -89,11 +97,17 @@ void Searcher::HistoryStore(const core::Move& move, int32_t depth) {
 
 template<Searcher::NodeKind nt>
 static bool CanPerformNullMove(core::Board& board, int32_t depth) {
-  return (nt == Searcher::NodeKind::kSimple && depth >= kNullMoveDepthThreshold && !core::IsKingAttacked(board));
+  return (nt == Searcher::NodeKind::kSimple && depth >= kNullMoveDepthThreshold
+      && !core::IsKingAttacked(board));
 }
 
 template<Searcher::NodeKind nt>
-inline score_t Searcher::MainSearch(int32_t depth, size_t idepth, score_t alpha, score_t beta, evaluation::DEval d_eval, SearcherFlags flags) {
+inline score_t Searcher::MainSearch(int32_t depth,
+                                    size_t idepth,
+                                    score_t alpha,
+                                    score_t beta,
+                                    evaluation::DEval d_eval,
+                                    SearcherFlags flags) {
   if (depth <= 0) {
     return QuiescenseSearch(alpha, beta, d_eval);
   }
@@ -102,7 +116,12 @@ inline score_t Searcher::MainSearch(int32_t depth, size_t idepth, score_t alpha,
 
   if (CanPerformNullMove<nt>(board_, depth)) {
     core::InvertMove move_data = core::MakeMove(board_, core::Move::GetEmptyMove());
-    score_t score = -Search<NodeKind::kSimple>(depth - kNullMoveR - 1, idepth + 1, -beta, -beta + 1, d_eval, flags);
+    score_t score = -Search<NodeKind::kSimple>(depth - kNullMoveR - 1,
+                                               idepth + 1,
+                                               -beta,
+                                               -beta + 1,
+                                               d_eval,
+                                               flags);
     core::UnmakeMove(board_, core::Move::GetEmptyMove(), move_data);
     if (score >= beta) {
       return beta;
@@ -112,7 +131,8 @@ inline score_t Searcher::MainSearch(int32_t depth, size_t idepth, score_t alpha,
     }
   }
 
-  if (nt == NodeKind::kSimple && (!core::IsKingAttacked(board_)) && std::abs(alpha) < kAlmostMate && std::abs(beta) < kAlmostMate && depth <= kFutilityDepthThreshold) {
+  if (nt == NodeKind::kSimple && (!core::IsKingAttacked(board_)) && std::abs(alpha) < kAlmostMate
+      && std::abs(beta) < kAlmostMate && depth <= kFutilityDepthThreshold) {
     score_t eval_score = evaluation::Evaluate(board_, d_eval);
     if (eval_score >= beta + kFutilityMargin[depth]) {
       return beta;
@@ -137,7 +157,12 @@ inline score_t Searcher::MainSearch(int32_t depth, size_t idepth, score_t alpha,
       flags |= TranspositionTable::Data::kPV;
     }
     if (best_move_depth_[idepth].type_ != core::MoveType::kNull) {
-     tt_.AddData(board_.hash_, TranspositionTable::Data(best_move_depth_[idepth], score, depth, flags, tt_.GetEpoch()));
+      tt_.AddData(board_.hash_,
+                  TranspositionTable::Data(best_move_depth_[idepth],
+                                           score,
+                                           depth,
+                                           flags,
+                                           tt_.GetEpoch()));
     }
   };
 
@@ -146,7 +171,6 @@ inline score_t Searcher::MainSearch(int32_t depth, size_t idepth, score_t alpha,
   if (hash_data.IsValid()) {
     hash_move = hash_data.GetMove();
     if (nt != NodeKind::kRoot && hash_data.GetDepth() >= depth && board_.move_counter_ < 90) {
-      //stats_.IncNodes();
       score_t score = AdjustCheckmate(hash_data.score_, idepth);
       if (hash_data.flags_ & TranspositionTable::Data::kExact) {
         best_move_depth_[idepth] = hash_data.move_;
@@ -165,8 +189,11 @@ inline score_t Searcher::MainSearch(int32_t depth, size_t idepth, score_t alpha,
   }
 
   size_t moves_done = 0;
-  MovePicker move_picker(board_, hash_move, first_killers_[idepth], second_killers_[idepth], history_table_);
+  MovePicker move_picker
+      (board_, hash_move, first_killers_[idepth], second_killers_[idepth], history_table_);
   bool alpha_improved = false;
+  size_t history_moves_done = 0;
+  bool is_check = core::IsKingAttacked(board_);
   for (;;) {
     core::Move move;
     if constexpr (nt == NodeKind::kRoot) {
@@ -180,6 +207,9 @@ inline score_t Searcher::MainSearch(int32_t depth, size_t idepth, score_t alpha,
     if (move.type_ == core::MoveType::kInvalid) {
       break;
     }
+    if (nt == NodeKind::kSimple && !is_check && history_moves_done > 3 && depth == 1) {
+      break;
+    }
     evaluation::DEval new_eval = d_eval;
     new_eval.UpdateTag(board_, move);
     core::InvertMove move_data = core::MakeMove(board_, move);
@@ -188,15 +218,24 @@ inline score_t Searcher::MainSearch(int32_t depth, size_t idepth, score_t alpha,
       continue;
     }
     moves_done++;
+    if (move_picker.GetStage() == MovePicker::MoveStage::kNone) {
+      history_moves_done++;
+    }
+    if (nt == NodeKind::kSimple && history_moves_done > 1 && depth >= 3 && !core::IsKingAttacked(board_) && moves_done > 1) {
+      score_t lmr_score = -Search<NodeKind::kSimple>(depth - 2, idepth + 1, -beta, -alpha, new_eval, flags);
+      if (lmr_score <= alpha) {
+        core::UnmakeMove(board_, move, move_data);
+        continue;
+      }
+      if (MustStop()) {
+        return 0;
+      }
+    }
     score_t new_score = alpha;
-    /*if constexpr (nt == NodeKind::kRoot) {
-      new_score = -Search<NodeKind::kPV>(depth - 1, idepth + 1, -beta, -alpha, new_eval, flags);
-    } else {
-      new_score = -Search<NodeKind::kPV>(depth - 1, idepth + 1, -beta, -alpha, new_eval, flags);
-    }*/
     const bool do_pv_search = ((nt == NodeKind::kRoot || nt == NodeKind::kPV) & (alpha_improved));
     if (do_pv_search) {
-      new_score = -Search<NodeKind::kSimple>(depth - 1, idepth + 1, -alpha - 1, -alpha, new_eval, flags);
+      new_score =
+          -Search<NodeKind::kSimple>(depth - 1, idepth + 1, -alpha - 1, -alpha, new_eval, flags);
       new_score = (new_score <= alpha ? alpha : alpha + 1);
     }
     if (!do_pv_search || (alpha < new_score && (nt == NodeKind::kRoot || new_score < beta))) {
@@ -223,13 +262,15 @@ inline score_t Searcher::MainSearch(int32_t depth, size_t idepth, score_t alpha,
   }
   if (moves_done == 0) {
     if (board_.move_side_ == core::Color::kWhite) {
-      if (core::IsCellAttacked<core::Color::kBlack>(board_, board_.GetKingPosition<core::Color::kWhite>())) {
+      if (core::IsCellAttacked<core::Color::kBlack>(board_,
+                                                    board_.GetKingPosition<core::Color::kWhite>())) {
         return -kMate + idepth;
       } else {
         return kStalemate;
       }
     } else {
-      if (core::IsCellAttacked<core::Color::kWhite>(board_, board_.GetKingPosition<core::Color::kBlack>())) {
+      if (core::IsCellAttacked<core::Color::kWhite>(board_,
+                                                    board_.GetKingPosition<core::Color::kBlack>())) {
         return -kMate + idepth;
       } else {
         return kStalemate;
@@ -240,5 +281,10 @@ inline score_t Searcher::MainSearch(int32_t depth, size_t idepth, score_t alpha,
   return alpha;
 }
 
-template score_t Searcher::MainSearch<Searcher::NodeKind::kRoot>(int32_t depth, size_t idepth, score_t alpha, score_t beta, evaluation::DEval d_eval, SearcherFlags flags);
+template score_t Searcher::MainSearch<Searcher::NodeKind::kRoot>(int32_t depth,
+                                                                 size_t idepth,
+                                                                 score_t alpha,
+                                                                 score_t beta,
+                                                                 evaluation::DEval d_eval,
+                                                                 SearcherFlags flags);
 }  // namespace search

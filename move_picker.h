@@ -22,6 +22,9 @@ class MovePicker {
   MoveStage GetStage() {
     return move_stage_;
   }
+  bool IsOutOfMoves() const {
+    return move_number_ == move_count_;
+  }
   core::Move GetMove() {
     while (move_number_ == move_count_ && move_stage_ != MoveStage::kNone) {
       GetNewMoves();
