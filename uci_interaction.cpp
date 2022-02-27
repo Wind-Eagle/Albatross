@@ -14,7 +14,7 @@ using core::Piece;
 
 namespace uci {
 void UciStart() {
-  std::cout << "id name Albatross x64 BMI2 0.2 beta" << std::endl;
+  std::cout << "id name Albatross x64 BMI2 0.2.1 beta" << std::endl;
   std::cout << "id author Wind_Eagle" << std::endl;
   std::cout << "uciok" << std::endl;
 }

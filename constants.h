@@ -34,7 +34,7 @@ constexpr score_t kStalemate = 0;
 constexpr int32_t kNullMoveDepthThreshold = 4;
 constexpr int32_t kNullMoveR = 2;
 constexpr int32_t kFutilityDepthThreshold = 3;
-constexpr score_t kFutilityMargin[4] = {0, 50, 300, 900};
+constexpr score_t kFutilityMargin[4] = {0, 50, 100, 200};
 
 }  // namespace search
 
