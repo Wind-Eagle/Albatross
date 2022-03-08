@@ -28,7 +28,7 @@ std::vector<core::Move> GetPV(core::Board board, core::Move move, TranspositionT
 
 void SearchThread::Run(const core::Board& start_board,
                        const std::vector<core::Move>& moves,
-                       std::chrono::milliseconds time) {
+                       std::chrono::milliseconds time, int max_depth) {
   auto start_time = std::chrono::steady_clock::now();
   core::Board board = start_board;
   RepetitionTable first;
@@ -41,7 +41,7 @@ void SearchThread::Run(const core::Board& start_board,
   }
   evaluation::DEval d_eval(board);
   Searcher searcher(board, d_eval, table_, communicator_, stats_, second, time, id_);
-  for (uint8_t depth = 1; depth <= 250; depth++) {
+  for (uint8_t depth = 1; depth <= max_depth; depth++) {
     core::Move best_move = core::Move::GetEmptyMove();
     score_t score = searcher.Run(depth, best_move);
     if (communicator_.IsStopped()) {

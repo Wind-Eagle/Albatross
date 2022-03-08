@@ -96,10 +96,10 @@ void Searcher::HistoryStore(const core::Move& move, int32_t depth) {
 }
 
 template<Searcher::NodeKind nt>
-static bool CanPerformNullMove(core::Board& board, int32_t depth, SearcherFlags flags) {
+static bool CanPerformNullMove(core::Board& board, int32_t depth, score_t alpha, score_t beta, SearcherFlags flags) {
   return (nt == Searcher::NodeKind::kSimple && depth >= kNullMoveDepthThreshold
-      && !core::IsKingAttacked(board)
-      && ((flags & (SearcherFlags::kCapture | SearcherFlags::kNullMove)) == SearcherFlags::kNone));
+      && !core::IsKingAttacked(board) && std::abs(alpha) < kAlmostMate && std::abs(beta) < kAlmostMate
+      && (flags & SearcherFlags::kNullMoveDisable) == SearcherFlags::kNone);
 }
 
 template<Searcher::NodeKind nt>
@@ -114,32 +114,6 @@ inline score_t Searcher::MainSearch(int32_t depth,
   }
   stats_.IncNodes();
   best_move_depth_[idepth] = core::Move::GetEmptyMove();
-
-  if (nt == NodeKind::kSimple && (!core::IsKingAttacked(board_)) && std::abs(alpha) < kAlmostMate
-      && std::abs(beta) < kAlmostMate && depth <= kFutilityDepthThreshold
-      && ((flags & SearcherFlags::kCapture) == SearcherFlags::kNone)) {
-    score_t eval_score = evaluation::Evaluate(board_, d_eval);
-    if (eval_score >= beta + kFutilityMargin[depth]) {
-      return beta;
-    }
-  }
-
-  if (CanPerformNullMove<nt>(board_, depth, flags)) {
-    core::InvertMove move_data = core::MakeMove(board_, core::Move::GetEmptyMove());
-    score_t score = -Search<NodeKind::kSimple>(depth - kNullMoveR - 1,
-                                               idepth + 1,
-                                               -beta,
-                                               -beta + 1,
-                                               d_eval,
-                                               flags | SearcherFlags::kNullMove);
-    core::UnmakeMove(board_, core::Move::GetEmptyMove(), move_data);
-    if (score >= beta) {
-      return beta;
-    }
-    if (MustStop()) {
-      return 0;
-    }
-  }
 
   score_t first_alpha = alpha;
   score_t first_beta = beta;
@@ -168,6 +142,7 @@ inline score_t Searcher::MainSearch(int32_t depth,
     }
   };
 
+  //TODO(Wind-Eagle): check hash table
   core::Move hash_move = core::Move::GetEmptyMove();
   TranspositionTable::Data hash_data = tt_.GetData(board_.hash_);
   if (hash_data.IsValid()) {
@@ -190,6 +165,36 @@ inline score_t Searcher::MainSearch(int32_t depth,
     }
   }
 
+  if (nt == NodeKind::kSimple && (!core::IsKingAttacked(board_)) && std::abs(alpha) < kAlmostMate
+      && std::abs(beta) < kAlmostMate && depth <= kFutilityDepthThreshold) {
+    score_t eval_score = evaluation::Evaluate(board_, d_eval);
+    if (eval_score >= beta + kFutilityMargin[depth]) {
+      return beta;
+    }
+  }
+
+  if (CanPerformNullMove<nt>(board_, depth, alpha, beta, flags)) {
+    core::InvertMove move_data = core::MakeMove(board_, core::Move::GetEmptyMove());
+    score_t score = -Search<NodeKind::kSimple>(depth - kNullMoveR - 1,
+                                               idepth + 1,
+                                               -beta,
+                                               -beta + 1,
+                                               d_eval,
+                                               (flags & SearcherFlags::kInherit) | SearcherFlags::kNullMove);
+    core::UnmakeMove(board_, core::Move::GetEmptyMove(), move_data);
+    if (score >= beta) {
+      if (depth < kNullMoveReductionDepthThreshold) {
+        return beta;
+      } else {
+        depth -= 4;
+        flags |= SearcherFlags::kNullMoveReduction;
+      }
+    }
+    if (MustStop()) {
+      return 0;
+    }
+  }
+
   size_t moves_done = 0;
   MovePicker move_picker
       (board_, hash_move, first_killers_[idepth], second_killers_[idepth], history_table_);
@@ -208,9 +213,7 @@ inline score_t Searcher::MainSearch(int32_t depth,
     if (move.type_ == core::MoveType::kInvalid) {
       break;
     }
-    if (nt == NodeKind::kSimple && ((flags & SearcherFlags::kCapture) == SearcherFlags::kNone) && history_moves_done > 3 && depth == 1) {
-      break;
-    }
+    bool is_move_capture = (move.type_ == core::MoveType::kEnPassant || board_.cells_[move.dst_] != core::kEmptyCell);
     evaluation::DEval new_eval = d_eval;
     new_eval.UpdateTag(board_, move);
     core::InvertMove move_data = core::MakeMove(board_, move);
@@ -218,19 +221,21 @@ inline score_t Searcher::MainSearch(int32_t depth,
       core::UnmakeMove(board_, move, move_data);
       continue;
     }
-    SearcherFlags new_flags = flags;
-    if (move_picker.GetStage() == MovePicker::MoveStage::kPromotion) {
-      new_flags |= SearcherFlags::kCapture;
-    } else {
-      new_flags &= (~SearcherFlags::kCapture);
+    SearcherFlags new_flags = (flags & SearcherFlags::kInherit);
+    if (is_move_capture) {
+        new_flags |= SearcherFlags::kCapture;
     }
     moves_done++;
     if (move_picker.GetStage() == MovePicker::MoveStage::kNone) {
       history_moves_done++;
     }
+    if (nt == NodeKind::kSimple && depth == 1 && !core::IsKingAttacked(board_) && history_moves_done > 2) {
+      core::UnmakeMove(board_, move, move_data);
+      continue;
+    }
     if (nt == NodeKind::kSimple && history_moves_done > 2 && depth >= 3 && moves_done > 1
-        && ((flags & SearcherFlags::kCapture) == SearcherFlags::kNone)) {
-      score_t lmr_score = -Search<NodeKind::kSimple>(depth - 2,
+        && !core::IsKingAttacked(board_)) {
+      score_t lmr_score = -Search<NodeKind::kSimple>(depth - kLateMoveReduction - 1,
                                                      idepth + 1,
                                                      -alpha - 1,
                                                      -alpha,
@@ -241,6 +246,7 @@ inline score_t Searcher::MainSearch(int32_t depth,
         continue;
       }
       if (MustStop()) {
+        core::UnmakeMove(board_, move, move_data);
         return 0;
       }
     }
@@ -271,7 +277,7 @@ inline score_t Searcher::MainSearch(int32_t depth,
     }
     if (alpha >= beta) {
       HashStore(beta);
-      if (move_picker.GetStage() >= MovePicker::MoveStage::kKiller) {
+      if (move_picker.GetStage() > MovePicker::MoveStage::kKiller) {
         KillerStore(move, idepth);
         HistoryStore(move, depth);
       }

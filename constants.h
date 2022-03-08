@@ -31,10 +31,12 @@ constexpr score_t kAlmostMate = 24999;
 constexpr score_t kMate = 29999;
 constexpr score_t kStalemate = 0;
 
-constexpr int32_t kNullMoveDepthThreshold = 4;
+constexpr int32_t kNullMoveDepthThreshold = 2;
+constexpr int32_t kNullMoveReductionDepthThreshold = 5;
 constexpr int32_t kNullMoveR = 2;
 constexpr int32_t kFutilityDepthThreshold = 3;
 constexpr score_t kFutilityMargin[4] = {0, 50, 100, 200};
+constexpr int32_t kLateMoveReduction = 1;
 
 }  // namespace search
 

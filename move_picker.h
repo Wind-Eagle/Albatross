@@ -32,6 +32,10 @@ class MovePicker {
     if (move_number_ == move_count_) {
       return core::Move::GetInvalidMove();
     }
+    if (move_number_ > 0 && moves_[move_number_] == hash_move_) {
+      move_number_++;
+      return core::Move::GetEmptyMove();
+    }
     return moves_[move_number_++];
   }
   core::Move GetRootMove(size_t job_id) {

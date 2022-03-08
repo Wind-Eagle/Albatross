@@ -82,7 +82,7 @@ class SearchThread {
   inline const SearchStats& GetStats() const {
     return stats_;
   }
-  void Run(const core::Board& start_board, const std::vector<core::Move>& moves, std::chrono::milliseconds time);
+  void Run(const core::Board& start_board, const std::vector<core::Move>& moves, std::chrono::milliseconds time, int max_depth);
  private:
   friend class Searcher;
   SearchCommunicator& communicator_;

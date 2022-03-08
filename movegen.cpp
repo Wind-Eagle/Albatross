@@ -270,11 +270,11 @@ size_t GenerateAllCaptures(const Board& board, Move* list) {
   size += GenerateKnightOrKing<c, Piece::kKnight, MoveGenType::kCapture>(board, list + size);
   size += GenerateKnightOrKing<c, Piece::kKing, MoveGenType::kCapture>(board, list + size);
   size += GenerateBishopOrRook<c, Piece::kBishop, MoveGenType::kCapture>(board,
-                                                                     list + size,
-                                                                     GetDiagPieces<c>(board));
+                                                                         list + size,
+                                                                         GetDiagPieces<c>(board));
   size += GenerateBishopOrRook<c, Piece::kRook, MoveGenType::kCapture>(board,
-                                                                   list + size,
-                                                                   GetLinePieces<c>(board));
+                                                                       list + size,
+                                                                       GetLinePieces<c>(board));
   return size;
 }
 
@@ -292,11 +292,11 @@ size_t GenerateAllSimpleMoves(const Board& board, Move* list) {
   size += GenerateKnightOrKing<c, Piece::kKnight, MoveGenType::kSimple>(board, list + size);
   size += GenerateKnightOrKing<c, Piece::kKing, MoveGenType::kSimple>(board, list + size);
   size += GenerateBishopOrRook<c, Piece::kBishop, MoveGenType::kSimple>(board,
-                                                                     list + size,
-                                                                     GetDiagPieces<c>(board));
+                                                                        list + size,
+                                                                        GetDiagPieces<c>(board));
   size += GenerateBishopOrRook<c, Piece::kRook, MoveGenType::kSimple>(board,
-                                                                   list + size,
-                                                                   GetLinePieces<c>(board));
+                                                                      list + size,
+                                                                      GetLinePieces<c>(board));
   size += GenerateCastling<c>(board, list + size);
   return size;
 }
@@ -347,8 +347,8 @@ bool IsMoveValidColor(const Board& board, const Move& move) {
       if (en_passant == kInvalidCoord) {
         return false;
       }
-      DecX<c>(en_passant);
-      return (move.src_ - 1 == en_passant || move.src_ + 1 == en_passant) && (move.dst_ == en_passant);
+      coord_t new_en_passant = DecX<c>(en_passant);
+      return (move.src_ - 1 == new_en_passant || move.src_ + 1 == new_en_passant) && (move.dst_ == en_passant);
     }
     if (move.type_ == MoveType::kKnightPromotion || move.type_ == MoveType::kBishopPromotion || move.type_ == MoveType::kRookPromotion || move.type_ == MoveType::kQueenPromotion) {
       if (GetX(move.src_) != GetPromotionLine(c)) {

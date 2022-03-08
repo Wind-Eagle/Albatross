@@ -37,7 +37,7 @@ struct Move {
   Move(MoveType type, coord_t src, coord_t dst, uint8_t info) : type_(type), src_(src), dst_(dst), info_(info) {
 
   }
-  bool operator == (const Move& rhs) {
+  bool operator == (const Move& rhs) const {
     return src_ == rhs.src_ && dst_ == rhs.dst_;
   }
   static Move GetEmptyMove() {

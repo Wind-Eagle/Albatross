@@ -14,7 +14,7 @@ using core::Piece;
 
 namespace uci {
 void UciStart() {
-  std::cout << "id name Albatross x64 BMI2 0.2.1 beta" << std::endl;
+  std::cout << "id name Albatross x64 BMI2 0.3 beta" << std::endl;
   std::cout << "id author Wind_Eagle" << std::endl;
   std::cout << "uciok" << std::endl;
 }
@@ -171,6 +171,7 @@ void HandlePositionMoves(const std::vector<std::string>& command) {
 void HandleGo(core::Board& board, search::SearchLauncher& search_launcher, const std::vector<std::string>& command) {
   int milliseconds_count = (1LL << 31) - 1;
   bool fixed_time = true;
+  int max_depth = 255;
   int wtime = 0, winc = 0, btime = 0, binc = 0;
   if (command.size() <= 1) {
     return;
@@ -182,6 +183,8 @@ void HandleGo(core::Board& board, search::SearchLauncher& search_launcher, const
     milliseconds_count = stoi(command[2]);
   } else if (command[1] == "infinite") {
     milliseconds_count = (1LL << 31) - 1;
+  } else if (command[1] == "depth") {
+    max_depth = std::stoi(command[2]);
   } else if (command.size() >= 3) {
     fixed_time = false;
     for (size_t i = 2; i < command.size(); i += 2) {
@@ -207,11 +210,17 @@ void HandleGo(core::Board& board, search::SearchLauncher& search_launcher, const
     }
   }
   std::vector<core::Move> moves;
-  search_launcher.Start(board, moves, std::chrono::milliseconds(milliseconds_count));
+  search_launcher.Start(board, moves, std::chrono::milliseconds(milliseconds_count), max_depth);
 }
 
 void HandleCost([[maybe_unused]]core::Board& board) {
 
+}
+
+void CheckEasterEgg(const std::vector<std::string>& command) {
+  if (command[0] == "sofcheck") {
+    std::cout<<"SoFCheck <3"<<std::endl;
+  }
 }
 
 void StartUciInteraction() {
@@ -237,6 +246,8 @@ void StartUciInteraction() {
       HandleCost(board);
     } else if (parsed_command[0] == "quit") {
       break;
+    } else {
+      CheckEasterEgg(parsed_command);
     }
   }
 }

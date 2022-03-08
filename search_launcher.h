@@ -18,9 +18,9 @@ class SearchLauncher {
   }
   inline void Stop();
   inline void Join();
-  void Start(const core::Board& board, const std::vector<core::Move>& moves, std::chrono::milliseconds time);
+  void Start(const core::Board& board, const std::vector<core::Move>& moves, std::chrono::milliseconds time, int max_depth);
  private:
-  inline void StartMainThread(const core::Board& board, const std::vector<core::Move>& moves, std::chrono::milliseconds time);
+  inline void StartMainThread(const core::Board& board, const std::vector<core::Move>& moves, std::chrono::milliseconds time, int max_depth);
   SearchCommunicator communicator_;
   TranspositionTable tt_;
 

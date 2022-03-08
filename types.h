@@ -65,7 +65,9 @@ namespace search {
     kNullMove = 2,
     kNullMoveReduction = 4,
     kLateMoveReduction = 8,
-    kAll = 15
+    kAll = 15,
+    kInherit = (kNullMove | kNullMoveReduction | kLateMoveReduction),
+    kNullMoveDisable = (kCapture | kNullMove | kNullMoveReduction)
   };
   ENUM_TO_INT(SearcherFlags, uint8_t)
 }  // namespace search

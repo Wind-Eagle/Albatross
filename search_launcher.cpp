@@ -14,16 +14,16 @@ inline void SearchLauncher::Join() {
 }
 void SearchLauncher::Start(const core::Board& board,
                            const std::vector<core::Move>& moves,
-                           std::chrono::milliseconds time) {
+                           std::chrono::milliseconds time, int max_depth) {
   Join();
   communicator_.Reset();
   tt_.NextEpoch();
-  main_thread_ = std::thread([this, board, moves, time]() { StartMainThread(board, moves, time); });
+  main_thread_ = std::thread([this, board, moves, time, max_depth]() { StartMainThread(board, moves, time, max_depth); });
 }
 
 inline void SearchLauncher::StartMainThread(const core::Board& board,
                                             const std::vector<core::Move>& moves,
-                                            std::chrono::milliseconds time) {
+                                            std::chrono::milliseconds time, int max_depth) {
   std::deque<SearchThread> search_threads;
   for (size_t i = 0; i < 1; ++i) {
     search_threads.emplace_back(communicator_, tt_, i, write_lock_);
@@ -31,7 +31,7 @@ inline void SearchLauncher::StartMainThread(const core::Board& board,
   std::vector<std::thread> threads;
   for (size_t i = 0; i < 1; ++i) {
     threads.emplace_back([&search_thread =
-    search_threads[i], &board, &moves, &time]() { search_thread.Run(board, moves, time); });
+    search_threads[i], &board, &moves, &time, &max_depth]() { search_thread.Run(board, moves, time, max_depth); });
   }
   static constexpr auto kStatsUpdateTick = std::chrono::milliseconds(3000);
   static constexpr auto kThreadTick = std::chrono::milliseconds(30);
