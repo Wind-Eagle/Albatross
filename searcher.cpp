@@ -147,7 +147,7 @@ inline score_t Searcher::MainSearch(int32_t depth,
   TranspositionTable::Data hash_data = tt_.GetData(board_.hash_);
   if (hash_data.IsValid()) {
     hash_move = hash_data.GetMove();
-    if (nt != NodeKind::kRoot && hash_data.GetDepth() >= depth && board_.move_counter_ < 90) {
+    if (nt == NodeKind::kSimple && hash_data.GetDepth() >= depth && board_.move_counter_ < 90) {
       score_t score = AdjustCheckmate(hash_data.score_, idepth);
       if (hash_data.flags_ & TranspositionTable::Data::kExact) {
         best_move_depth_[idepth] = hash_data.move_;
@@ -166,13 +166,28 @@ inline score_t Searcher::MainSearch(int32_t depth,
   }
 
   if (nt == NodeKind::kSimple && (!core::IsKingAttacked(board_)) && std::abs(alpha) < kAlmostMate
-      && std::abs(beta) < kAlmostMate && depth <= kFutilityDepthThreshold) {
+      && std::abs(beta) < kAlmostMate && depth <= kRazoringDepthThreshold) {
     score_t eval_score = evaluation::Evaluate(board_, d_eval);
-    if (eval_score >= beta + kFutilityMargin[depth]) {
-      return beta;
+    if (depth <= kFutilityDepthThreshold) {
+      if (eval_score >= beta + kFutilityMargin[depth]) {
+        return beta;
+      }
+    }
+    if ((flags & SearcherFlags::kRazoring) == SearcherFlags::kNone) {
+      score_t threshold = alpha - kRazoringMargin[depth];
+      if (eval_score <= threshold) {
+        score_t q_search_score = QuiescenseSearch(threshold, threshold + 1, d_eval);
+        if (q_search_score <= threshold) {
+          //return alpha;
+          depth--;
+          flags |= SearcherFlags::kRazoring;
+        }
+      }
     }
   }
-
+  if (depth <= 0) {
+    return QuiescenseSearch(alpha, beta, d_eval);
+  }
   if (CanPerformNullMove<nt>(board_, depth, alpha, beta, flags)) {
     core::InvertMove move_data = core::MakeMove(board_, core::Move::GetEmptyMove());
     score_t score = -Search<NodeKind::kSimple>(depth - kNullMoveR - 1,

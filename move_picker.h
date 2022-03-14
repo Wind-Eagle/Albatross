@@ -45,6 +45,10 @@ class MovePicker {
     if (move_number_ == move_count_) {
       return core::Move::GetInvalidMove();
     }
+    if (move_number_ > 0 && moves_[move_number_] == hash_move_) {
+      move_number_++;
+      return core::Move::GetEmptyMove();
+    }
     if (job_id > move_count_) {
       std::mt19937 rnd(time(0));
       for (size_t i = 0; i < move_count_; i++) {

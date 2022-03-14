@@ -69,4 +69,8 @@ inline void SearchLauncher::StartMainThread(const core::Board& board,
   }
 }
 
+void SearchLauncher::NewGame() {
+  tt_.NewGame();
+}
+
 }  // namespace search

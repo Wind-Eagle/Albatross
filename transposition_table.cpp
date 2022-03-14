@@ -13,9 +13,6 @@ inline constexpr int32_t TranspositionTable::Data::GetWeight(const uint8_t epoch
   if (move_.type_ == core::MoveType::kNull) {
     result -= 4;
   }
-  if (flags_ & kPV) {
-    result += 2;
-  }
   return result;
 }
 void TranspositionTable::AddData(core::hash_t hash, Data data) {

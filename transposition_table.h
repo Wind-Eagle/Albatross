@@ -80,6 +80,9 @@ class TranspositionTable {
   void NextEpoch() {
     epoch_++;
   }
+  void NewGame() {
+    epoch_ += 20;
+  }
   void AddData(core::hash_t hash, Data data);
   Data GetData(core::hash_t hash) const;
   void Prefetch();

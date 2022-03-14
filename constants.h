@@ -35,7 +35,9 @@ constexpr int32_t kNullMoveDepthThreshold = 2;
 constexpr int32_t kNullMoveReductionDepthThreshold = 5;
 constexpr int32_t kNullMoveR = 2;
 constexpr int32_t kFutilityDepthThreshold = 3;
-constexpr score_t kFutilityMargin[4] = {0, 50, 100, 200};
+constexpr score_t kFutilityMargin[4] = {0, 50, 150, 250};
+constexpr int32_t kRazoringDepthThreshold = 4;
+constexpr score_t kRazoringMargin[5] = {0, 75, 150, 250, 350};
 constexpr int32_t kLateMoveReduction = 1;
 
 }  // namespace search

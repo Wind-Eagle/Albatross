@@ -11,7 +11,7 @@ namespace evaluation {
 extern search::score_t kPSQ[16][64];
 class DEval {
  public:
-  DEval(core::Board& board) {
+  DEval(const core::Board& board) {
     for (core::coord_t i = 0; i < 64; i++) {
       first_ += kPSQ[board.cells_[i]][i];
     }

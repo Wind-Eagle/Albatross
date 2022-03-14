@@ -65,7 +65,8 @@ namespace search {
     kNullMove = 2,
     kNullMoveReduction = 4,
     kLateMoveReduction = 8,
-    kAll = 15,
+    kRazoring = 15,
+    kAll = 31,
     kInherit = (kNullMove | kNullMoveReduction | kLateMoveReduction),
     kNullMoveDisable = (kCapture | kNullMove | kNullMoveReduction)
   };
