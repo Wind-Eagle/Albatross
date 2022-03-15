@@ -38,6 +38,10 @@ inline constexpr subcoord_t GetX(coord_t coord) {
   return (coord >> 3);
 }
 
+inline static subcoord_t constexpr GetPromotionLine(Color c) {
+  return (c == Color::kWhite) ? 6 : 1;
+}
+
 inline constexpr subcoord_t GetY(coord_t coord) {
   return (coord & 7);
 }

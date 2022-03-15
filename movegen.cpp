@@ -16,9 +16,6 @@ extern core::bitboard_t kBishopMagic[(1 << 9) * 64], kRookMagic[(1 << 12) * 64];
 extern core::bitboard_t kWhitePawnReversedAttacks[64], kBlackPawnReversedAttacks[64];
 
 namespace core {
-inline static subcoord_t constexpr GetPromotionLine(Color c) {
-  return (c == Color::kWhite) ? 6 : 1;
-}
 
 inline static subcoord_t constexpr GetDoubleMoveLine(Color c) {
   return (c == Color::kWhite) ? 1 : 6;

@@ -71,6 +71,11 @@ void UnmakeMove(Board& board, const Move& move, const InvertMove& inverted_move)
 std::string MoveToString(const Move& move);
 Move StringToMove(const Board& board, const std::string& str);
 
+inline bool IsMovePromotion(const Move& move) {
+  return move.type_ == MoveType::kKnightPromotion || move.type_ == MoveType::kBishopPromotion ||
+      move.type_ == MoveType::kRookPromotion || move.type_ == MoveType::kQueenPromotion;
+}
+
 }  // namespace core
 
 #endif  // MOVE_H_

@@ -30,7 +30,7 @@ class Searcher {
   enum class NodeKind {kRoot, kPV, kSimple};
   inline score_t Run(uint8_t depth, core::Move& best_move) {
     depth_ = depth;
-    score_t score = MainSearch<NodeKind::kRoot>(depth, 0, -kScoreMax, kScoreMax, d_eval_, SearcherFlags::kNone);
+    score_t score = MainSearch<NodeKind::kRoot>(depth, 0, -kScoreMax, kScoreMax, d_eval_, SearcherFlags::kNone, 0);
     best_move = best_move_depth_[0];
     return score;
   }
@@ -40,9 +40,9 @@ class Searcher {
  private:
   inline bool MustStop() const;
   template<NodeKind nt>
-  score_t Search(int32_t depth, size_t idepth, score_t alpha, score_t beta, evaluation::DEval d_eval, SearcherFlags flags);
+  score_t Search(int32_t depth, size_t idepth, score_t alpha, score_t beta, evaluation::DEval d_eval, SearcherFlags flags, int32_t ext_counter);
   template<NodeKind nt>
-  score_t MainSearch(int32_t depth, size_t idepth, score_t alpha, score_t beta, evaluation::DEval d_eval, SearcherFlags flags);
+  score_t MainSearch(int32_t depth, size_t idepth, score_t alpha, score_t beta, evaluation::DEval d_eval, SearcherFlags flags, int32_t ext_counter);
 
   score_t QuiescenseSearch(score_t alpha, score_t beta, evaluation::DEval d_eval);
 
