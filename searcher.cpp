@@ -267,6 +267,10 @@ inline score_t Searcher::MainSearch(int32_t depth,
     }
     score_t new_score = alpha;
     const bool do_pv_search = ((nt == NodeKind::kRoot || nt == NodeKind::kPV) & (alpha_improved));
+    alpha_improved = true;
+    // Searching only first move with full window;
+    // there is also an option to search moves with full window while alpha is not improved
+    // this causes a huge instability in time per depth
     if (do_pv_search) {
       new_score =
           -Search<NodeKind::kSimple>(depth - 1,
@@ -283,12 +287,14 @@ inline score_t Searcher::MainSearch(int32_t depth,
     }
     core::UnmakeMove(board_, move, move_data);
     if (MustStop()) {
+      if (nt == NodeKind::kRoot) {
+        return alpha;
+      }
       return 0;
     }
     if (new_score > alpha) {
       best_move_depth_[idepth] = move;
       alpha = new_score;
-      alpha_improved = true;
     }
     if (alpha >= beta) {
       HashStore(beta);

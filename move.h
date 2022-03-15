@@ -40,6 +40,9 @@ struct Move {
   bool operator == (const Move& rhs) const {
     return src_ == rhs.src_ && dst_ == rhs.dst_;
   }
+  bool operator != (const Move& rhs) const {
+    return src_ != rhs.src_ || dst_ != rhs.dst_;
+  }
   static Move GetEmptyMove() {
     return Move(MoveType::kNull, 0, 0, 0);
   }

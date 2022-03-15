@@ -45,6 +45,9 @@ void SearchThread::Run(const core::Board& start_board,
     core::Move best_move = core::Move::GetEmptyMove();
     score_t score = searcher.Run(depth, best_move);
     if (communicator_.IsStopped()) {
+      if (best_move != core::Move::GetEmptyMove() && id_ == 0) {
+        stats_.SetBestMove(depth - 1, best_move);
+      }
       return;
     }
     if (communicator_.IsDepthNotFinished(depth)) {
