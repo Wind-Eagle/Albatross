@@ -248,9 +248,10 @@ inline score_t Searcher::MainSearch(int32_t depth,
       core::UnmakeMove(board_, move, move_data);
       continue;
     }
-    if (nt == NodeKind::kSimple && history_moves_done > 2 && depth >= 3 && moves_done > 1
+    if (nt == NodeKind::kSimple && history_moves_done > 0 && depth >= 3 && moves_done > 1
         && !core::IsKingAttacked(board_)) {
-      score_t lmr_score = -Search<NodeKind::kSimple>(depth - kLateMoveReduction - 1,
+      int32_t depth_reduction = (history_moves_done) / 4 + 1;
+      score_t lmr_score = -Search<NodeKind::kSimple>(depth - depth_reduction - 1,
                                                      idepth + 1,
                                                      -alpha - 1,
                                                      -alpha,
@@ -265,6 +266,7 @@ inline score_t Searcher::MainSearch(int32_t depth,
         return 0;
       }
     }
+
     score_t new_score = alpha;
     const bool do_pv_search = ((nt == NodeKind::kRoot || nt == NodeKind::kPV) & (alpha_improved));
     alpha_improved = true;
