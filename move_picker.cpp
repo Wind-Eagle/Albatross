@@ -55,6 +55,9 @@ void MovePicker::GetNewMoves() {
       if (core::IsMoveValid(board_, second_killer_)) {
         moves_[move_count_++] = second_killer_;
       }
+      if (countermove_ != first_killer_ && countermove_ != second_killer_ && core::IsMoveValid(board_, countermove_)) {
+        moves_[move_count_++] = countermove_;
+      }
       break;
     }
     case MoveStage::kAll: {
@@ -73,7 +76,7 @@ void MovePicker::GetNewMoves() {
                       > history_table_[(m2.src_ << 6) ^ m2.dst_];
                 });
       for (size_t i = old_move_count; i < move_count_; i++) {
-        if (moves_[i] == first_killer_ || moves_[i] == second_killer_) {
+        if (moves_[i] == first_killer_ || moves_[i] == second_killer_ || moves_[i] == countermove_) {
           moves_[i] = core::Move::GetEmptyMove();
         }
       }

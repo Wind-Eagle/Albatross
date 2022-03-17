@@ -40,9 +40,9 @@ class Searcher {
  private:
   inline bool MustStop() const;
   template<NodeKind nt>
-  score_t Search(int32_t depth, size_t idepth, score_t alpha, score_t beta, evaluation::DEval d_eval, SearcherFlags flags, int32_t ext_counter);
+  score_t Search(int32_t depth, size_t idepth, score_t alpha, score_t beta, evaluation::DEval d_eval, SearcherFlags flags, int32_t ext_counter, core::Move prev_move = core::Move::GetEmptyMove());
   template<NodeKind nt>
-  score_t MainSearch(int32_t depth, size_t idepth, score_t alpha, score_t beta, evaluation::DEval d_eval, SearcherFlags flags, int32_t ext_counter);
+  score_t MainSearch(int32_t depth, size_t idepth, score_t alpha, score_t beta, evaluation::DEval d_eval, SearcherFlags flags, int32_t ext_counter, core::Move prev_move = core::Move::GetEmptyMove());
 
   score_t QuiescenseSearch(score_t alpha, score_t beta, evaluation::DEval d_eval);
 
@@ -62,6 +62,7 @@ class Searcher {
   core::Move second_killers_[255];
   core::Move best_move_depth_[255];
   uint64_t history_table_[64 * 64];
+  core::Move countermove_table_[64 * 64];
   size_t depth_ = 0;
   score_t prev_score_ = 0;
   mutable size_t counter_ = 0;

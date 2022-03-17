@@ -10,13 +10,14 @@ namespace search {
 class MovePicker {
  public:
   enum class MoveStage : int8_t { kHash, kCapture, kPromotion, kKiller, kAll, kNone };
-  MovePicker(const core::Board& board, const core::Move hash_move, const core::Move first_killer, const core::Move second_killer, uint64_t* history_table)
+  MovePicker(const core::Board& board, const core::Move hash_move, const core::Move first_killer, const core::Move second_killer, uint64_t* history_table, core::Move countermove)
       : board_(board) {
     move_stage_ = MoveStage::kHash;
     hash_move_ = hash_move;
     first_killer_ = first_killer;
     second_killer_ = second_killer;
     history_table_ = history_table;
+    countermove_ = countermove;
   }
   void GetNewMoves();
   MoveStage GetStage() {
@@ -69,6 +70,7 @@ class MovePicker {
   core::Move first_killer_;
   core::Move second_killer_;
   uint64_t* history_table_;
+  core::Move countermove_;
 };
 
 class QuiescenseMovePicker {
