@@ -71,6 +71,57 @@ namespace search {
     kNullMoveDisable = (kCapture | kNullMove | kNullMoveReduction)
   };
   ENUM_TO_INT(SearcherFlags, uint8_t)
+
+  class ScorePair {
+   public:
+    ScorePair() {
+      pair_ = 0;
+    }
+    ScorePair(score_t f) {
+      pair_ = (f * (1 << 16)) + f;
+    }
+    ScorePair(score_t f, score_t s) {
+      pair_ = (s * (1 << 16)) + f;
+    }
+    bool operator == (ScorePair rhs) {
+      return this->pair_ == rhs.pair_;
+    }
+    bool operator != (ScorePair rhs) {
+      return this->pair_ != rhs.pair_;
+    }
+    ScorePair operator + (ScorePair rhs) {
+      return ScorePair(pair_ + rhs.pair_);
+    }
+    ScorePair operator - (ScorePair rhs) {
+      return ScorePair(pair_ - rhs.pair_);
+    }
+    ScorePair operator - () {
+      return ScorePair(-pair_);
+    }
+    ScorePair operator * (score_t rhs) {
+      return ScorePair(pair_ * rhs);
+    }
+    ScorePair& operator += (ScorePair rhs) {
+      this->pair_ += rhs.pair_;
+      return (*this);
+    }
+    ScorePair& operator -= (ScorePair rhs) {
+      this->pair_ -= rhs.pair_;
+      return (*this);
+    }
+    score_t GetFirst() {
+      const uint16_t unsigned_res = static_cast<uint32_t>(pair_) & 0xffffU;
+      return static_cast<score_t>(unsigned_res);
+    }
+    score_t GetSecond() {
+      uint16_t unsigned_res = static_cast<uint32_t>(pair_) >> 16;
+      if (GetFirst() < 0) {
+        unsigned_res++;
+      }
+      return static_cast<score_t>(unsigned_res);
+    }
+    int32_t pair_;
+  };
 }  // namespace search
 
 #endif  // TYPES_H_

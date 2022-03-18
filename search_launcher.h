@@ -16,7 +16,7 @@ class SearchLauncher {
       main_thread_.join();
     }
   }
-  inline void Stop();
+  void Stop();
   inline void Join();
   void Start(const core::Board& board, const std::vector<core::Move>& moves, std::chrono::milliseconds time, int max_depth);
   void NewGame();

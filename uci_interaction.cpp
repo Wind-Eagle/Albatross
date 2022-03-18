@@ -14,7 +14,7 @@ using core::Piece;
 
 namespace uci {
 void UciStart() {
-  std::cout << "id name Albatross x64 BMI2 0.5.1 beta" << std::endl;
+  std::cout << "id name Albatross x64 BMI2 0.6 beta" << std::endl;
   std::cout << "id author Wind_Eagle" << std::endl;
   std::cout << "uciok" << std::endl;
 }
@@ -214,7 +214,7 @@ void HandleGo(core::Board& board, search::SearchLauncher& search_launcher, const
 }
 
 void HandleCost([[maybe_unused]]core::Board& board) {
-
+  std::cout<<evaluation::Evaluate(board, evaluation::DEval(board))<<std::endl;
 }
 
 void CheckEasterEgg(const std::vector<std::string>& command) {
@@ -246,6 +246,8 @@ void StartUciInteraction() {
       HandleCost(board);
     } else if (parsed_command[0] == "ucinewgame") {
       search_launcher.NewGame();
+    } else if (parsed_command[0] == "stop") {
+      search_launcher.Stop();
     } else if (parsed_command[0] == "quit") {
       break;
     } else {

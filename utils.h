@@ -168,6 +168,26 @@ inline constexpr bool IsEqualToFigure(cell_t cell, Piece piece) {
   return (cell & 7) == static_cast<int8_t>(piece);
 }
 
+inline constexpr Piece GetPiece(cell_t cell) {
+  cell = GetCellUncolored(cell);
+  if (IsEqualToFigure(cell, Piece::kPawn)) {
+    return Piece::kPawn;
+  }
+  if (IsEqualToFigure(cell, Piece::kKnight)) {
+    return Piece::kKnight;
+  }
+  if (IsEqualToFigure(cell, Piece::kBishop)) {
+    return Piece::kBishop;
+  }
+  if (IsEqualToFigure(cell, Piece::kRook)) {
+    return Piece::kRook;
+  }
+  if (IsEqualToFigure(cell, Piece::kQueen)) {
+    return Piece::kQueen;
+  }
+  return Piece::kKing;
+}
+
 inline std::string CoordToString(coord_t coord) {
   std::string answer = "!!";
   answer[0] = (coord & 7) + 'a';

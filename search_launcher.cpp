@@ -3,7 +3,7 @@
 #include "search_launcher.h"
 
 namespace search {
-inline void SearchLauncher::Stop() {
+void SearchLauncher::Stop() {
   communicator_.Stop();
 }
 inline void SearchLauncher::Join() {

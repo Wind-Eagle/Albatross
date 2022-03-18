@@ -8,21 +8,24 @@
 #include "evaluation_consts.h"
 
 namespace evaluation {
-extern search::score_t kPSQ[16][64];
+extern search::ScorePair kPSQ[16][64];
 class DEval {
  public:
   DEval(const core::Board& board) {
     for (core::coord_t i = 0; i < 64; i++) {
-      first_ += kPSQ[board.cells_[i]][i];
+      res_ = res_ + kPSQ[board.cells_[i]][i];
+      stage_ += kPieceTaperedWeight[static_cast<int>(core::GetPiece(board.cells_[i]))];
     }
   }
-  search::score_t GetScore() const {
-    return first_;
+  search::ScorePair GetScore() const {
+    return res_;
+  }
+  uint8_t GetStage() const {
+    return stage_;
   }
   void UpdateTag(core::Board& board, core::Move move);
  private:
-  search::score_t first_ = 0;
-  search::score_t second_ = 0;
+  search::ScorePair res_;
   uint8_t stage_ = 0;
 };
 
