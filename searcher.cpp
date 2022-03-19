@@ -178,8 +178,14 @@ inline score_t Searcher::MainSearch(int32_t depth,
     if ((flags & SearcherFlags::kRazoring) == SearcherFlags::kNone) {
       score_t threshold = alpha - kRazoringMargin[depth];
       if (eval_score <= threshold) {
-        score_t q_search_score = QuiescenseSearch(threshold, threshold + 1, d_eval);
+        /*score_t q_search_score = QuiescenseSearch(threshold, threshold + 1, d_eval);
         if (q_search_score <= threshold) {
+          //return alpha;
+          depth--;
+          flags |= SearcherFlags::kRazoring;
+        }*/
+        score_t q_search_score = QuiescenseSearch(alpha - 1, alpha, d_eval);
+        if (q_search_score <= alpha) {
           //return alpha;
           depth--;
           flags |= SearcherFlags::kRazoring;
@@ -189,6 +195,13 @@ inline score_t Searcher::MainSearch(int32_t depth,
   }
   if (depth <= 0) {
     return QuiescenseSearch(alpha, beta, d_eval);
+  }
+  bool node_futile = false;
+  if (nt == NodeKind::kSimple && !core::IsKingAttacked(board_) && depth <= kFutilityDepthThreshold) {
+    score_t eval_score = evaluation::Evaluate(board_, d_eval);
+    if (eval_score + kFutilityMargin[depth] <= alpha) {
+      node_futile = true;
+    }
   }
   if (CanPerformNullMove<nt>(board_, depth, alpha, beta, flags)) {
     core::InvertMove move_data = core::MakeMove(board_, core::Move::GetEmptyMove());
@@ -243,9 +256,6 @@ inline score_t Searcher::MainSearch(int32_t depth,
     int32_t new_ext_counter = ext_counter;
     int32_t ext_depth = 0;
 
-    if (is_move_capture && (flags & SearcherFlags::kCapture) != SearcherFlags::kNone) {
-      new_ext_counter += 16;
-    }
     if (core::IsEqualToFigure(board_.cells_[move.dst_], core::Piece::kPawn) && core::GetX(move.dst_) == core::GetPromotionLine(core::GetInvertedColor(board_.move_side_))) {
       new_ext_counter += 32;
     }
@@ -265,7 +275,7 @@ inline score_t Searcher::MainSearch(int32_t depth,
     }
 
     if (new_ext_counter >= 32) {
-      ext_depth += new_ext_counter /= 32;
+      ext_depth += new_ext_counter / 32;
       new_ext_counter %= 32;
     }
 
@@ -277,6 +287,10 @@ inline score_t Searcher::MainSearch(int32_t depth,
       history_moves_done++;
     }
     if (nt == NodeKind::kSimple && depth == 1 && !core::IsKingAttacked(board_) && history_moves_done > 2 && ext_depth == 0) {
+      core::UnmakeMove(board_, move, move_data);
+      continue;
+    }
+    if (nt == NodeKind::kSimple && node_futile && !core::IsKingAttacked(board_) && move_picker.GetStage() == MovePicker::MoveStage::kNone) {
       core::UnmakeMove(board_, move, move_data);
       continue;
     }

@@ -34,10 +34,10 @@ constexpr score_t kStalemate = 0;
 constexpr int32_t kNullMoveDepthThreshold = 2;
 constexpr int32_t kNullMoveReductionDepthThreshold = 5;
 constexpr int32_t kNullMoveR = 2;
-constexpr int32_t kFutilityDepthThreshold = 3;
-constexpr score_t kFutilityMargin[4] = {0, 50, 150, 250};
-constexpr int32_t kRazoringDepthThreshold = 4;
-constexpr score_t kRazoringMargin[5] = {0, 75, 150, 250, 350};
+constexpr int32_t kFutilityDepthThreshold = 6;
+constexpr score_t kFutilityMargin[7] = {0, 50, 100, 150, 225, 300, 400};
+constexpr int32_t kRazoringDepthThreshold = 6;
+constexpr score_t kRazoringMargin[7] = {0, 75, 150, 225, 300, 450, 600};
 constexpr int32_t kLateMoveReduction = 1;
 
 }  // namespace search
