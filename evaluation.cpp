@@ -20,6 +20,12 @@ void InitEvaluation() {
   }
 }
 
+int GetDistance(core::coord_t lhs, core::coord_t rhs) {
+  int x = core::GetX(lhs) - core::GetX(rhs);
+  int y = core::GetY(lhs) - core::GetY(rhs);
+  return std::sqrt(x * x + y * y);
+}
+
 template<core::Color c>
 static search::score_t EvaluateKing(const core::Board& board) {
   search::score_t score = 0;
@@ -27,11 +33,15 @@ static search::score_t EvaluateKing(const core::Board& board) {
     if (board.b_pieces_[core::MakeCell('q')] == 0) {
       score -= kPSQ[core::MakeCell('K')][board.GetKingPosition<core::Color::kWhite>()].GetFirst();
       score += kKingLatePSQ[board.GetKingPosition<core::Color::kWhite>()];
+    } else {
+      score -= kQueenDistance[GetDistance(core::GetLowest(board.b_pieces_[core::MakeCell('q')]), board.GetKingPosition<core::Color::kWhite>())];
     }
   } else {
     if (board.b_pieces_[core::MakeCell('Q')] == 0) {
       score += kPSQ[core::MakeCell('k')][board.GetKingPosition<core::Color::kBlack>()].GetFirst();
       score += kKingLatePSQ[board.GetKingPosition<core::Color::kBlack>()];
+    } else {
+      score -= kQueenDistance[GetDistance(core::GetLowest(board.b_pieces_[core::MakeCell('Q')]), board.GetKingPosition<core::Color::kBlack>())];
     }
   }
   return score;

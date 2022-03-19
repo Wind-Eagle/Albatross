@@ -77,11 +77,11 @@ namespace search {
     ScorePair() {
       pair_ = 0;
     }
-    ScorePair(score_t f) {
-      pair_ = (f * (1 << 16)) + f;
+    explicit ScorePair(int32_t p) {
+      pair_ = p;
     }
-    ScorePair(score_t f, score_t s) {
-      pair_ = (s * (1 << 16)) + f;
+    explicit ScorePair(score_t f, score_t s) {
+      pair_ = static_cast<int32_t>(s) * 0x10000 + static_cast<int32_t>(f);
     }
     bool operator == (ScorePair rhs) {
       return this->pair_ == rhs.pair_;

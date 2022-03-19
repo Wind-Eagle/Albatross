@@ -224,14 +224,14 @@ static constexpr search::score_t kPieceSecondPSQ[6][64] = {
         0, -10, -5, -5, -5, -5, -10, 0
     },
     {
-        0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0
+        0, 0, 0, 10, 10, 0, 0, 0,
+        0, 0, 0, 10, 10, 0, 0, 0,
+        0, 0, 0, 10, 10, 0, 0, 0,
+        0, 0, 0, 10, 10, 0, 0, 0,
+        7, 7, 7, 10, 10, 7, 7, 7,
+        10, 10, 10, 10, 10, 10, 10, 10,
+        25, 25, 25, 25, 25, 25, 25, 25,
+        15, 15, 15, 15, 15, 15, 15, 15
     },
     {
         0, 0, 0, 0, 0, 0, 0, 0,
@@ -267,6 +267,8 @@ constexpr search::score_t kKingLatePSQ[64] = {
 
 constexpr search::score_t kPieceFirstWeight[6] = {100, 325, 350, 525, 950, 0};
 constexpr search::score_t kPieceSecondWeight[6] = {100, 325, 350, 525, 950, 0};
+constexpr search::score_t kQueenDistance[12] = {0, 100, 75, 50, 30, 15, 10, 5, 0, 0, 0, 0};
+
 constexpr int8_t kPieceTaperedWeight[7] = {0, 0, 1, 1, 2, 4, 0};
 constexpr search::score_t kTwoBishops = 25;
 
