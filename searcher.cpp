@@ -184,11 +184,9 @@ inline score_t Searcher::MainSearch(int32_t depth,
           depth--;
           flags |= SearcherFlags::kRazoring;
         }*/
-        score_t q_search_score = QuiescenseSearch(alpha - 1, alpha, d_eval);
-        if (q_search_score <= alpha) {
-          //return alpha;
-          depth--;
-          flags |= SearcherFlags::kRazoring;
+        score_t q_search_score = QuiescenseSearch(threshold, threshold + 1, d_eval);
+        if (q_search_score <= threshold) {
+          return alpha;
         }
       }
     }

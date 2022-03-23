@@ -19,7 +19,7 @@ namespace core {
     evaluation::InitEvaluation();
   }
   void SayHello() {
-    std::cout << "Albatross Engine version 0.7 (beta)" << std::endl;
+    std::cout << "Albatross Engine version 0.7.2 (beta)" << std::endl;
     std::cout << "Chess engine by Wind_Eagle" << std::endl;
     std::cout << "Current state: "<<std::endl;
     std::cout << "1) working on better evaluation" << std::endl;
