@@ -14,7 +14,7 @@ using core::Piece;
 
 namespace uci {
 void UciStart() {
-  std::cout << "id name Albatross x64 BMI2 0.7.2 beta" << std::endl;
+  std::cout << "id name Albatross x64 BMI2 0.8 beta" << std::endl;
   std::cout << "id author Wind_Eagle" << std::endl;
   std::cout << "uciok" << std::endl;
 }
@@ -214,7 +214,7 @@ void HandleGo(core::Board& board, search::SearchLauncher& search_launcher, const
 }
 
 void HandleCost([[maybe_unused]]core::Board& board) {
-  std::cout<<evaluation::Evaluate(board, evaluation::DEval(board))<<std::endl;
+  std::cout<<"Not implemented"<<std::endl;
 }
 
 void CheckEasterEgg(const std::vector<std::string>& command) {

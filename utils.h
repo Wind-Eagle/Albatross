@@ -151,6 +151,32 @@ inline uint64_t GetRandom64() {
   return rndgen64();
 }
 
+static constexpr uint64_t kHashK1 = 0xb492b66fbe98f273ULL;
+static constexpr uint64_t kHashK2 = 0x9ae16a3b2f90404fULL;
+
+inline constexpr uint64_t RotateRight(const uint64_t x, const size_t shift) {
+  return (shift == 0) ? x : ((x >> shift) | (x << (64 - shift)));
+}
+
+inline constexpr uint64_t HashFinalize(const uint64_t u, const uint64_t v, const uint64_t mul) {
+  uint64_t a = (u ^ v) * mul;
+  a ^= (a >> 47);
+  uint64_t b = (v ^ a) * mul;
+  b ^= (b >> 47);
+  b *= mul;
+  return b;
+}
+
+inline uint64_t GetHash16(const core::bitboard_t v0, const core::bitboard_t v1) {
+  constexpr uint64_t len = 16;
+  const uint64_t mul = kHashK2 + len * 2;
+  const uint64_t a = v0 + kHashK2;
+  const uint64_t b = v1;
+  const uint64_t c = RotateRight(b, 37) * mul + a;
+  const uint64_t d = (RotateRight(a, 25) + b) * mul;
+  return HashFinalize(c, d, mul);
+}
+
 inline constexpr bool CheckCellValidness(cell_t piece) {
   return piece < kPiecesTypeCount && piece != kInvalidCell && piece != kColorOffset;
 }

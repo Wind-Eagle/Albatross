@@ -4,6 +4,7 @@
 #include "board.h"
 #include "move.h"
 #include "search_classes.h"
+#include "evaluation.h"
 
 #include <chrono>
 #include <thread>

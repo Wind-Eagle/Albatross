@@ -23,7 +23,7 @@ class DEval {
   uint8_t GetStage() const {
     return stage_;
   }
-  void UpdateTag(core::Board& board, core::Move move);
+  void UpdateTag(const core::Board& board, core::Move move);
  private:
   search::ScorePair res_;
   uint8_t stage_ = 0;

@@ -19,12 +19,13 @@ class Searcher {
   Searcher(core::Board& board,
            evaluation::DEval d_eval,
            TranspositionTable& tt,
+           evaluation::Evaluator& evaluator,
            SearchCommunicator& communicator,
            SearchStats& stats,
            RepetitionTable& repetitions,
            const std::chrono::milliseconds& time,
            size_t job_id)
-      : board_(board), d_eval_(d_eval), tt_(tt), communicator_(communicator), stats_(stats), repetitions_(repetitions), time_(time), job_id_(job_id) {
+      : board_(board), d_eval_(d_eval), tt_(tt), evaluator_(evaluator), communicator_(communicator), stats_(stats), repetitions_(repetitions), time_(time), job_id_(job_id) {
     start_time_ = std::chrono::steady_clock().now();
   }
   enum class NodeKind {kRoot, kPV, kSimple};
@@ -52,6 +53,7 @@ class Searcher {
   core::Board& board_;
   evaluation::DEval d_eval_;
   TranspositionTable& tt_;
+  evaluation::Evaluator& evaluator_;
   SearchCommunicator& communicator_;
   SearchStats& stats_;
   RepetitionTable& repetitions_;

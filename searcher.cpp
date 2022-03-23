@@ -31,7 +31,7 @@ static bool IsMoveLegal(const core::Board& board) {
 
 score_t Searcher::QuiescenseSearch(score_t alpha, score_t beta, evaluation::DEval d_eval) {
   stats_.IncNodes();
-  const score_t score = evaluation::Evaluate(board_, d_eval);
+  const score_t score = evaluator_.Evaluate(board_, d_eval);
   alpha = std::max(alpha, score);
   if (alpha >= beta) {
     return beta;
@@ -169,7 +169,7 @@ inline score_t Searcher::MainSearch(int32_t depth,
 
   if (nt == NodeKind::kSimple && (!core::IsKingAttacked(board_)) && std::abs(alpha) < kAlmostMate
       && std::abs(beta) < kAlmostMate && depth <= kRazoringDepthThreshold) {
-    score_t eval_score = evaluation::Evaluate(board_, d_eval);
+    score_t eval_score = evaluator_.Evaluate(board_, d_eval);
     if (depth <= kFutilityDepthThreshold) {
       if (eval_score >= beta + kFutilityMargin[depth]) {
         return beta;
@@ -196,7 +196,7 @@ inline score_t Searcher::MainSearch(int32_t depth,
   }
   bool node_futile = false;
   if (nt == NodeKind::kSimple && !core::IsKingAttacked(board_) && depth <= kFutilityDepthThreshold) {
-    score_t eval_score = evaluation::Evaluate(board_, d_eval);
+    score_t eval_score = evaluator_.Evaluate(board_, d_eval);
     if (eval_score + kFutilityMargin[depth] <= alpha) {
       node_futile = true;
     }

@@ -40,7 +40,7 @@ void SearchThread::Run(const core::Board& start_board,
     MakeMove(board, i);
   }
   evaluation::DEval d_eval(board);
-  Searcher searcher(board, d_eval, table_, communicator_, stats_, second, time, id_);
+  Searcher searcher(board, d_eval, table_, evaluator_, communicator_, stats_, second, time, id_);
   for (uint8_t depth = 1; depth <= max_depth; depth++) {
     core::Move best_move = core::Move::GetEmptyMove();
     score_t score = searcher.Run(depth, best_move);

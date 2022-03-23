@@ -1,7 +1,7 @@
 #include "dynamic_evaluator.h"
 
 namespace evaluation {
-void DEval::UpdateTag(core::Board& board, core::Move move) {
+void DEval::UpdateTag(const core::Board& board, core::Move move) {
   stage_ -= kPieceTaperedWeight[static_cast<int>(core::GetPiece(board.cells_[move.dst_]))];
   switch (move.type_) {
     case core::MoveType::kSimple: {

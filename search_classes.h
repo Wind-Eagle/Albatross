@@ -4,6 +4,7 @@
 #include <condition_variable>
 #include "move.h"
 #include "transposition_table.h"
+#include "evaluation.h"
 
 namespace search {
 class SearchCommunicator {
@@ -88,6 +89,7 @@ class SearchThread {
   SearchCommunicator& communicator_;
   SearchStats stats_;
   TranspositionTable& table_;
+  evaluation::Evaluator evaluator_;
   size_t id_;
   std::mutex& write_lock_;
 };
