@@ -5,6 +5,7 @@ namespace evaluation {
 search::ScorePair kPSQ[16][64];
 core::bitboard_t kWhitePassedPawnBitboard[64], kBlackPassedPawnBitboard[64];
 core::bitboard_t kWhiteOpenPawnBitboard[64], kBlackOpenPawnBitboard[64];
+core::bitboard_t kIsolatedPawnBitboard[64];
 
 void InitEvaluation() {
   for (core::Color c : {core::Color::kWhite, core::Color::kBlack}) {
@@ -35,6 +36,9 @@ void InitEvaluation() {
       }
       if (core::GetX(j) < x && std::abs(core::GetY(j) - y) == 0) {
         kBlackOpenPawnBitboard[i] |= (1ULL << j);
+      }
+      if (std::abs(core::GetY(j) - y) == 1) {
+        kIsolatedPawnBitboard[i] |= (1ULL << j);
       }
     }
   }
@@ -71,26 +75,39 @@ template<core::Color c>
 static search::score_t EvaluatePawnsColor(const core::Board& board) {
   search::score_t score = 0;
   core::bitboard_t b_pieces = board.b_pieces_[core::MakeCell(c, core::Piece::kPawn)];
+  core::bitboard_t our_pawns = board.b_pieces_[core::MakeCell(c, core::Piece::kPawn)];
   core::bitboard_t enemy_pawns = board.b_pieces_[core::MakeCell(core::GetInvertedColor(c), core::Piece::kPawn)];
   core::bitboard_t all_pawns = board.b_pieces_[core::MakeCell(c, core::Piece::kPawn)] | board.b_pieces_[core::MakeCell(core::GetInvertedColor(c), core::Piece::kPawn)];
   while (b_pieces) {
     core::coord_t cell = core::ExtractLowest(b_pieces);
+    bool is_pawn_passed = false;
     if constexpr (c == core::Color::kWhite) {
       if (!(kWhiteOpenPawnBitboard[cell] & all_pawns)) {
         if (!(kWhitePassedPawnBitboard[cell] & enemy_pawns)) {
           score += kPassedPawn;
+          is_pawn_passed = true;
         } else {
           score += kOpenPawn;
         }
+      }
+      if (kWhiteOpenPawnBitboard[cell] & our_pawns) {
+        score += kDoublePawn;
       }
     } else {
       if (!(kBlackOpenPawnBitboard[cell] & all_pawns)) {
         if (!(kBlackPassedPawnBitboard[cell] & enemy_pawns)) {
           score += kPassedPawn;
+          is_pawn_passed = true;
         } else {
           score += kOpenPawn;
         }
       }
+      if (kBlackOpenPawnBitboard[cell] & our_pawns) {
+        score += kDoublePawn;
+      }
+    }
+    if (!(kIsolatedPawnBitboard[cell] & our_pawns) && !is_pawn_passed) {
+      score += kIsolatedPawn;
     }
   }
   return score;

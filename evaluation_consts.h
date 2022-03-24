@@ -269,9 +269,12 @@ constexpr search::score_t kPieceFirstWeight[6] = {100, 325, 350, 525, 950, 0};
 constexpr search::score_t kPieceSecondWeight[6] = {100, 325, 350, 525, 950, 0};
 constexpr search::score_t kQueenDistance[12] = {0, 100, 55, 35, 20, 15, 7, 3, 0, 0, 0};
 
-constexpr int8_t kPieceTaperedWeight[7] = {0, 0, 1, 1, 2, 4, 0};
-constexpr search::score_t kPassedPawn = 20;
+constexpr search::score_t kPassedPawn = 40;
+constexpr search::score_t kDoublePawn = -20;
+constexpr search::score_t kIsolatedPawn = -20;
 constexpr search::score_t kOpenPawn = 5;
+
+constexpr int8_t kPieceTaperedWeight[7] = {0, 0, 1, 1, 2, 4, 0};
 
 void InitEvaluation();
 
