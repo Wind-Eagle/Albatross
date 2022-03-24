@@ -6,6 +6,7 @@ search::ScorePair kPSQ[16][64];
 core::bitboard_t kWhitePassedPawnBitboard[64], kBlackPassedPawnBitboard[64];
 core::bitboard_t kWhiteOpenPawnBitboard[64], kBlackOpenPawnBitboard[64];
 core::bitboard_t kIsolatedPawnBitboard[64];
+extern core::bitboard_t kWhitePawnReversedAttacks[64], kBlackPawnReversedAttacks[64];
 
 void InitEvaluation() {
   for (core::Color c : {core::Color::kWhite, core::Color::kBlack}) {
@@ -78,13 +79,22 @@ static search::score_t EvaluatePawnsColor(const core::Board& board) {
   core::bitboard_t our_pawns = board.b_pieces_[core::MakeCell(c, core::Piece::kPawn)];
   core::bitboard_t enemy_pawns = board.b_pieces_[core::MakeCell(core::GetInvertedColor(c), core::Piece::kPawn)];
   core::bitboard_t all_pawns = board.b_pieces_[core::MakeCell(c, core::Piece::kPawn)] | board.b_pieces_[core::MakeCell(core::GetInvertedColor(c), core::Piece::kPawn)];
+  core::bitboard_t left =
+      (c == core::Color::kWhite ? (our_pawns & (~core::kBitboardColumns[0])) << 7 : (our_pawns & (~core::kBitboardColumns[0])) >> 9);
+  core::bitboard_t right =
+      (c == core::Color::kWhite ? (our_pawns & (~core::kBitboardColumns[7])) << 9 : (our_pawns & (~core::kBitboardColumns[7])) >> 7);
+  core::bitboard_t attacks = (left | right);
+  score += __builtin_popcountll(our_pawns & attacks) * kProtectedPawn;
   while (b_pieces) {
     core::coord_t cell = core::ExtractLowest(b_pieces);
     bool is_pawn_passed = false;
     if constexpr (c == core::Color::kWhite) {
       if (!(kWhiteOpenPawnBitboard[cell] & all_pawns)) {
         if (!(kWhitePassedPawnBitboard[cell] & enemy_pawns)) {
-          score += kPassedPawn;
+          score += kPassedPawn[7 - core::GetX(cell)];
+          if ((1ULL) & attacks) {
+            score += kPassedPawn[7 - core::GetX(cell)];
+          }
           is_pawn_passed = true;
         } else {
           score += kOpenPawn;
@@ -96,7 +106,10 @@ static search::score_t EvaluatePawnsColor(const core::Board& board) {
     } else {
       if (!(kBlackOpenPawnBitboard[cell] & all_pawns)) {
         if (!(kBlackPassedPawnBitboard[cell] & enemy_pawns)) {
-          score += kPassedPawn;
+          score += kPassedPawn[core::GetX(cell)];
+          if ((1ULL) & attacks) {
+            score += kPassedPawn[core::GetX(cell)];
+          }
           is_pawn_passed = true;
         } else {
           score += kOpenPawn;
@@ -106,10 +119,15 @@ static search::score_t EvaluatePawnsColor(const core::Board& board) {
         score += kDoublePawn;
       }
     }
-    if (!(kIsolatedPawnBitboard[cell] & our_pawns) && !is_pawn_passed) {
-      score += kIsolatedPawn;
+    if (!(kIsolatedPawnBitboard[cell] & our_pawns)) {
+      if (!is_pawn_passed) {
+        score += kIsolatedPawn;
+      } else {
+        score += kIsolatedPassedPawn;
+      }
     }
   }
+
   return score;
 }
 
