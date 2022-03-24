@@ -93,7 +93,7 @@ static search::score_t EvaluatePawnsColor(const core::Board& board) {
         if (!(kWhitePassedPawnBitboard[cell] & enemy_pawns)) {
           score += kPassedPawn[7 - core::GetX(cell)];
           if ((1ULL) & attacks) {
-            score += kPassedPawn[7 - core::GetX(cell)];
+            score += kProtectedPassedPawn[7 - core::GetX(cell)];
           }
           is_pawn_passed = true;
         } else {
@@ -108,7 +108,7 @@ static search::score_t EvaluatePawnsColor(const core::Board& board) {
         if (!(kBlackPassedPawnBitboard[cell] & enemy_pawns)) {
           score += kPassedPawn[core::GetX(cell)];
           if ((1ULL) & attacks) {
-            score += kPassedPawn[core::GetX(cell)];
+            score += kProtectedPassedPawn[core::GetX(cell)];
           }
           is_pawn_passed = true;
         } else {

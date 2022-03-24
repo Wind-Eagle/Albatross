@@ -244,7 +244,6 @@ inline score_t Searcher::MainSearch(int32_t depth,
     bool is_move_capture = (move.type_ == core::MoveType::kEnPassant || board_.cells_[move.dst_] != core::kEmptyCell);
     evaluation::DEval new_eval = d_eval;
     new_eval.UpdateTag(board_, move);
-    core::cell_t was_cell = board_.cells_[move.dst_];
     core::InvertMove move_data = core::MakeMove(board_, move);
     if (!IsMoveLegal(board_)) {
       core::UnmakeMove(board_, move, move_data);
@@ -254,16 +253,6 @@ inline score_t Searcher::MainSearch(int32_t depth,
     int32_t new_ext_counter = ext_counter;
     int32_t ext_depth = 0;
 
-    if (core::IsEqualToFigure(board_.cells_[move.dst_], core::Piece::kPawn) && core::GetX(move.dst_) == core::GetPromotionLine(core::GetInvertedColor(board_.move_side_))) {
-      new_ext_counter += 32;
-    }
-    if (core::IsMovePromotion(move)) {
-      new_ext_counter += 32;
-    }
-    if (is_move_capture && !core::IsEqualToFigure(was_cell, core::Piece::kPawn) && board_.b_all_ ==
-        (board_.b_pieces_[core::MakeCell('P')]  | board_.b_pieces_[core::MakeCell('p')] | board_.b_pieces_[core::MakeCell('K')] | board_.b_pieces_[core::MakeCell('k')])) {
-      new_ext_counter += 96;
-    }
     if (IsKingAttacked(board_)) {
       if (nt == NodeKind::kSimple) {
         new_ext_counter += 16;
