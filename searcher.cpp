@@ -167,9 +167,16 @@ inline score_t Searcher::MainSearch(int32_t depth,
     }
   }
 
+  score_t eval_score = kScoreMax;
+  auto GetEvaluation = [&]() {
+    if (eval_score == kScoreMax) {
+      eval_score = evaluator_.Evaluate(board_, d_eval);
+    }
+  };
+
   if (nt == NodeKind::kSimple && (!core::IsKingAttacked(board_)) && std::abs(alpha) < kAlmostMate
       && std::abs(beta) < kAlmostMate && depth <= kRazoringDepthThreshold) {
-    score_t eval_score = evaluator_.Evaluate(board_, d_eval);
+    GetEvaluation();
     if (depth <= kFutilityDepthThreshold) {
       if (eval_score >= beta + kFutilityMargin[depth]) {
         return beta;
@@ -178,12 +185,6 @@ inline score_t Searcher::MainSearch(int32_t depth,
     if ((flags & SearcherFlags::kRazoring) == SearcherFlags::kNone) {
       score_t threshold = alpha - kRazoringMargin[depth];
       if (eval_score <= threshold) {
-        /*score_t q_search_score = QuiescenseSearch(threshold, threshold + 1, d_eval);
-        if (q_search_score <= threshold) {
-          //return alpha;
-          depth--;
-          flags |= SearcherFlags::kRazoring;
-        }*/
         score_t q_search_score = QuiescenseSearch(threshold, threshold + 1, d_eval);
         if (q_search_score <= threshold) {
           return alpha;
@@ -195,9 +196,9 @@ inline score_t Searcher::MainSearch(int32_t depth,
     return QuiescenseSearch(alpha, beta, d_eval);
   }
   bool node_futile = false;
-  if (nt == NodeKind::kSimple && !core::IsKingAttacked(board_) && depth <= kFutilityDepthThreshold) {
-    score_t eval_score = evaluator_.Evaluate(board_, d_eval);
-    if (eval_score + kFutilityMargin[depth] <= alpha) {
+  if (nt == NodeKind::kSimple && !core::IsKingAttacked(board_) && depth <= kFutilityRevDepthThreshold) {
+    GetEvaluation();
+    if (eval_score + kFutilityRevMargin[depth] <= alpha) {
       node_futile = true;
     }
   }

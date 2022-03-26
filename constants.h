@@ -38,6 +38,8 @@ constexpr int32_t kFutilityDepthThreshold = 4;
 constexpr score_t kFutilityMargin[5] = {0, 50, 100, 175, 250};
 constexpr int32_t kRazoringDepthThreshold = 4;
 constexpr score_t kRazoringMargin[5] = {0, 100, 200, 300, 400};
+constexpr int32_t kFutilityRevDepthThreshold = 4;
+constexpr score_t kFutilityRevMargin[5] = {0, 50, 100, 175, 250};
 constexpr int32_t kLateMoveReduction = 1;
 
 }  // namespace search

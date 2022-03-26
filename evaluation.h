@@ -58,7 +58,7 @@ class Evaluator {
   Evaluator() = default;
   search::score_t Evaluate(const core::Board& board, DEval d_eval);
  private:
-  search::score_t EvaluationFunction(const core::Board& board);
+  search::score_t EvaluationFunction(const core::Board& board, int32_t stage);
   std::unique_ptr<PawnHashTable> table_ = std::make_unique<PawnHashTable>();
 };
 

@@ -52,23 +52,38 @@ static int GetDistance(core::coord_t lhs, core::coord_t rhs) {
 }
 
 template<core::Color c>
-static search::score_t EvaluateKingColor(const core::Board& board) {
+static search::score_t EvaluateKingColor(const core::Board& board, int32_t stage) {
   search::score_t score = 0;
   if constexpr (c == core::Color::kWhite) {
-    if (board.b_pieces_[core::MakeCell('q')] == 0) {
-      score -= kPSQ[core::MakeCell('K')][board.GetKingPosition<core::Color::kWhite>()].GetFirst();
-      score += kKingLatePSQ[board.GetKingPosition<core::Color::kWhite>()];
-    } else {
+    if (board.b_pieces_[core::MakeCell('q')] != 0) {
       score -= kQueenDistance[GetDistance(core::GetLowest(board.b_pieces_[core::MakeCell('q')]), board.GetKingPosition<core::Color::kWhite>())];
     }
   } else {
-    if (board.b_pieces_[core::MakeCell('Q')] == 0) {
-      score += kPSQ[core::MakeCell('k')][board.GetKingPosition<core::Color::kBlack>()].GetFirst();
-      score += kKingLatePSQ[board.GetKingPosition<core::Color::kBlack>()];
-    } else {
+    if (board.b_pieces_[core::MakeCell('Q')] != 0) {
       score -= kQueenDistance[GetDistance(core::GetLowest(board.b_pieces_[core::MakeCell('Q')]), board.GetKingPosition<core::Color::kBlack>())];
     }
   }
+
+  /*if (!board.IsKingsideCastling(c) && !board.IsQueensideCastling(c)) {
+    core::bitboard_t our_pawns = board.b_pieces_[core::MakeCell(c, core::Piece::kPawn)];
+    core::bitboard_t enemy_pawns = board.b_pieces_[core::MakeCell(core::GetInvertedColor(c), core::Piece::kPawn)];
+    core::subcoord_t y = core::GetY(board.GetKingPosition<c>());
+
+    core::coord_t shift1 = (c == core::Color::kBlack) ? (y + 47) : (y + 7);
+    core::coord_t shift2 = (c == core::Color::kBlack) ? (y + 39) : (y + 15);
+    core::coord_t shift3 = (c == core::Color::kBlack) ? (y + 31) : (y + 23);
+
+    constexpr core::bitboard_t row1 = core::kBitboardRows[(c == core::Color::kWhite) ? 1 : 6];
+    constexpr core::bitboard_t row2 = core::kBitboardRows[(c == core::Color::kWhite) ? 2 : 5];
+    constexpr core::bitboard_t row3 = core::kBitboardRows[(c == core::Color::kWhite) ? 3 : 4];
+
+    core::bitboard_t shield_mask1 = ((our_pawns & row1) >> shift1) & 7U;
+    core::bitboard_t shield_mask2 = ((our_pawns & row2) >> shift2) & 7U;
+
+    core::bitboard_t storm_mask2 = ((enemy_pawns & row2) >> shift2) & 7U;
+    core::bitboard_t storm_mask3 = ((enemy_pawns & row3) >> shift3) & 7U;
+  }*/
+
   return score;
 }
 
@@ -146,19 +161,25 @@ static search::score_t EvaluatePawns(const core::Board& board, const std::unique
   return score;
 }
 
-search::score_t Evaluator::EvaluationFunction(const core::Board& board) {
+static search::score_t EvaluateKing(const core::Board& board, int32_t stage) {
+  search::score_t score = 0;
+  score += EvaluateKingColor<core::Color::kWhite>(board, stage);
+  score -= EvaluateKingColor<core::Color::kBlack>(board, stage);
+  return score;
+}
+
+search::score_t Evaluator::EvaluationFunction(const core::Board& board, int32_t stage) {
   search::score_t score = 0;
   score += EvaluatePawns(board, table_);
-  score += EvaluateKingColor<core::Color::kWhite>(board);
-  score -= EvaluateKingColor<core::Color::kBlack>(board);
+  score += EvaluateKing(board, stage);
   return score;
 }
 
 search::score_t Evaluator::Evaluate(const core::Board& board, DEval d_eval) {
   search::ScorePair scorep = d_eval.GetScore();
-  int stage = (static_cast<int>(d_eval.GetStage()) * 256 + 12) / 24;
+  int stage = (static_cast<int>(d_eval.GetStage()) * 256 + kFullTaperedEval) / kFullTaperedEval;
   search::score_t score = (static_cast<int32_t>(scorep.GetFirst()) * stage + static_cast<int32_t>(scorep.GetSecond()) * (256 - stage)) / 256;
-  score += EvaluationFunction(board);
+  score += EvaluationFunction(board, stage);
   if (board.move_side_ == core::Color::kBlack) {
     score = -score;
   }
