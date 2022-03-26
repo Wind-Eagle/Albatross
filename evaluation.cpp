@@ -8,6 +8,9 @@ core::bitboard_t kWhiteOpenPawnBitboard[64], kBlackOpenPawnBitboard[64];
 core::bitboard_t kIsolatedPawnBitboard[64];
 extern core::bitboard_t kWhitePawnReversedAttacks[64], kBlackPawnReversedAttacks[64];
 
+search::score_t kPawnShieldCost[8][8], kPawnStormCost[8][8];
+search::score_t kPawnShieldCostInv[8][8], kPawnStormCostInv[8][8];
+
 void InitEvaluation() {
   for (core::Color c : {core::Color::kWhite, core::Color::kBlack}) {
     for (core::Piece p : {core::Piece::kPawn, core::Piece::kKnight, core::Piece::kBishop, core::Piece::kRook, core::Piece::kQueen, core::Piece::kKing}) {
@@ -43,6 +46,29 @@ void InitEvaluation() {
       }
     }
   }
+
+  for (int i = 0; i < 8; i++) {
+    for (int j = 0; j < 8; j++) {
+      for (int k = 0; k < 3; k++) {
+        if ((1 << k) & i) {
+          kPawnShieldCost[i][j] += kPawnShield[k];
+          kPawnShieldCostInv[i][j] += kPawnShield[2 - k];
+        }
+        if ((1 << k) & j) {
+          kPawnShieldCost[i][j] += kPawnShield[k + 3];
+          kPawnShieldCostInv[i][j] += kPawnShield[5 - k];
+        }
+        if ((1 << k) & i) {
+          kPawnStormCost[i][j] += kPawnStorm[k];
+          kPawnStormCostInv[i][j] += kPawnStorm[2 - k];
+        }
+        if ((1 << k) & j) {
+          kPawnStormCost[i][j] += kPawnStorm[k + 3];
+          kPawnStormCostInv[i][j] += kPawnStorm[5 - k];
+        }
+      }
+    }
+  }
 }
 
 static int GetDistance(core::coord_t lhs, core::coord_t rhs) {
@@ -64,25 +90,37 @@ static search::score_t EvaluateKingColor(const core::Board& board, int32_t stage
     }
   }
 
-  /*if (!board.IsKingsideCastling(c) && !board.IsQueensideCastling(c)) {
+  core::subcoord_t x = core::GetX(board.GetKingPosition<c>());
+  core::subcoord_t y = core::GetY(board.GetKingPosition<c>());
+  if (!board.IsKingsideCastling(c) && !board.IsQueensideCastling(c) && ((c == core::Color::kWhite && x < 2) || (c == core::Color::kBlack && x > 5))) {
+    search::score_t safety_score = 0;
     core::bitboard_t our_pawns = board.b_pieces_[core::MakeCell(c, core::Piece::kPawn)];
     core::bitboard_t enemy_pawns = board.b_pieces_[core::MakeCell(core::GetInvertedColor(c), core::Piece::kPawn)];
-    core::subcoord_t y = core::GetY(board.GetKingPosition<c>());
 
-    core::coord_t shift1 = (c == core::Color::kBlack) ? (y + 47) : (y + 7);
-    core::coord_t shift2 = (c == core::Color::kBlack) ? (y + 39) : (y + 15);
-    core::coord_t shift3 = (c == core::Color::kBlack) ? (y + 31) : (y + 23);
+    core::coord_t shift1 = (c == core::Color::kBlack) ? (y + 47 - (7 - x) * 8) : (y + 7 + x * 8);
+    core::coord_t shift2 = (c == core::Color::kBlack) ? (y + 39 - (7 - x) * 8) : (y + 15 + x * 8);
+    core::coord_t shift3 = (c == core::Color::kBlack) ? (y + 31 - (7 - x) * 8) : (y + 23 + x * 8);
 
-    constexpr core::bitboard_t row1 = core::kBitboardRows[(c == core::Color::kWhite) ? 1 : 6];
-    constexpr core::bitboard_t row2 = core::kBitboardRows[(c == core::Color::kWhite) ? 2 : 5];
-    constexpr core::bitboard_t row3 = core::kBitboardRows[(c == core::Color::kWhite) ? 3 : 4];
+    core::bitboard_t row1 = core::kBitboardRows[(c == core::Color::kWhite) ? x + 1 : x - 1];
+    core::bitboard_t row2 = core::kBitboardRows[(c == core::Color::kWhite) ? x + 2 : x - 2];
+    core::bitboard_t row3 = core::kBitboardRows[(c == core::Color::kWhite) ? x + 3 : x - 3];
 
     core::bitboard_t shield_mask1 = ((our_pawns & row1) >> shift1) & 7U;
     core::bitboard_t shield_mask2 = ((our_pawns & row2) >> shift2) & 7U;
 
     core::bitboard_t storm_mask2 = ((enemy_pawns & row2) >> shift2) & 7U;
     core::bitboard_t storm_mask3 = ((enemy_pawns & row3) >> shift3) & 7U;
-  }*/
+
+    if (y < 4) {
+      safety_score += kPawnShieldCost[shield_mask1][shield_mask2];
+      safety_score += kPawnStormCost[storm_mask2][storm_mask3];
+    } else {
+      safety_score += kPawnShieldCostInv[shield_mask1][shield_mask2];
+      safety_score += kPawnStormCostInv[storm_mask2][storm_mask3];
+    }
+    safety_score = safety_score * stage / 256;
+    score += safety_score;
+  }
 
   return score;
 }

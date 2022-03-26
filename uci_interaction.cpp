@@ -14,7 +14,7 @@ using core::Piece;
 
 namespace uci {
 void UciStart() {
-  std::cout << "id name Albatross x64 BMI2 0.8.4 beta" << std::endl;
+  std::cout << "id name Albatross x64 BMI2 0.8.5 beta" << std::endl;
   std::cout << "id author Wind_Eagle" << std::endl;
   std::cout << "uciok" << std::endl;
 }
@@ -204,9 +204,9 @@ void HandleGo(core::Board& board, search::SearchLauncher& search_launcher, const
   }
   if (!fixed_time) {
     if (board.move_side_ == core::Color::kWhite) {
-      milliseconds_count = wtime / std::max(5, 20 - board.move_number_ / 10)  + winc;
+      milliseconds_count = wtime / std::max(5, 20 - board.move_number_ / 10) + winc;
     } else {
-      milliseconds_count = btime / std::max(5, 20 - board.move_number_ / 10)  + binc;
+      milliseconds_count = btime / std::max(5, 20 - board.move_number_ / 10) + binc;
     }
   }
   std::vector<core::Move> moves;
@@ -214,7 +214,9 @@ void HandleGo(core::Board& board, search::SearchLauncher& search_launcher, const
 }
 
 void HandleCost([[maybe_unused]]core::Board& board) {
-  std::cout<<"Not implemented"<<std::endl;
+  evaluation::DEval d_eval(board);
+  evaluation::Evaluator evaluator;
+  std::cout<<evaluator.Evaluate(board, d_eval)<<std::endl;
 }
 
 void CheckEasterEgg(const std::vector<std::string>& command) {
