@@ -193,13 +193,6 @@ inline score_t Searcher::MainSearch(int32_t depth,
   if (depth <= 0) {
     return QuiescenseSearch(alpha, beta, d_eval);
   }
-  bool node_futile = false;
-  if (nt == NodeKind::kSimple && !core::IsKingAttacked(board_) && depth <= kFutilityRevDepthThreshold) {
-    GetEvaluation();
-    if (eval_score + kFutilityRevMargin[depth] <= alpha) {
-      node_futile = true;
-    }
-  }
   if (CanPerformNullMove<nt>(board_, depth, alpha, beta, flags)) {
     core::InvertMove move_data = core::MakeMove(board_, core::Move::GetEmptyMove());
     score_t score = -Search<NodeKind::kSimple>(depth - kNullMoveR - 1,
@@ -252,19 +245,6 @@ inline score_t Searcher::MainSearch(int32_t depth,
     int32_t new_ext_counter = ext_counter;
     int32_t ext_depth = 0;
 
-    if (IsKingAttacked(board_)) {
-      if (nt == NodeKind::kSimple) {
-        new_ext_counter += 16;
-      } else {
-        new_ext_counter += 32;
-      }
-    }
-
-    if (new_ext_counter >= 32) {
-      ext_depth += new_ext_counter / 32;
-      new_ext_counter %= 32;
-    }
-
     if (is_move_capture) {
         new_flags |= SearcherFlags::kCapture;
     }
@@ -272,17 +252,9 @@ inline score_t Searcher::MainSearch(int32_t depth,
     if (move_picker.GetStage() == MovePicker::MoveStage::kNone) {
       history_moves_done++;
     }
-    if (nt == NodeKind::kSimple && depth == 1 && !core::IsKingAttacked(board_) && history_moves_done > 2 && ext_depth == 0) {
-      core::UnmakeMove(board_, move, move_data);
-      continue;
-    }
-    if (nt == NodeKind::kSimple && node_futile && !core::IsKingAttacked(board_) && move_picker.GetStage() == MovePicker::MoveStage::kNone) {
-      core::UnmakeMove(board_, move, move_data);
-      continue;
-    }
-    if (nt == NodeKind::kSimple && history_moves_done > 0 && depth >= 3 && moves_done > 1
+    if (nt == NodeKind::kSimple && history_moves_done > 2 && depth >= 3 && moves_done > 0
         && !core::IsKingAttacked(board_) && ext_depth == 0) {
-      int32_t depth_reduction = (history_moves_done) / 4 + 1;
+      int32_t depth_reduction = 1;
       score_t lmr_score = -Search<NodeKind::kSimple>(depth - depth_reduction - 1 + ext_depth,
                                                      idepth + 1,
                                                      -alpha - 1,
