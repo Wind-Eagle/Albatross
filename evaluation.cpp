@@ -213,10 +213,29 @@ search::score_t Evaluator::EvaluationFunction(const core::Board& board, int32_t 
   return score;
 }
 
-search::score_t Evaluator::Evaluate(const core::Board& board, DEval d_eval) {
+bool Evaluator::CheckLazyEval(const core::Board& board, search::score_t& score, search::score_t alpha, search::score_t beta) {
+  search::score_t cur_score = score;
+  if (board.move_side_ == core::Color::kBlack) {
+    cur_score = -cur_score;
+  }
+  if (cur_score < alpha - kDynamicEvalThreshold) {
+    score = alpha;
+    return true;
+  }
+  if (cur_score > beta + kDynamicEvalThreshold) {
+    score = beta;
+    return true;
+  }
+  return false;
+}
+
+search::score_t Evaluator::Evaluate(const core::Board& board, DEval d_eval, search::score_t alpha, search::score_t beta) {
   search::ScorePair scorep = d_eval.GetScore();
   int stage = (static_cast<int>(d_eval.GetStage()) * 256 + kFullTaperedEval) / kFullTaperedEval;
   search::score_t score = (static_cast<int32_t>(scorep.GetFirst()) * stage + static_cast<int32_t>(scorep.GetSecond()) * (256 - stage)) / 256;
+  if (CheckLazyEval(board, score, alpha, beta)) {
+    return score;
+  }
   score += EvaluationFunction(board, stage);
   if (board.move_side_ == core::Color::kBlack) {
     score = -score;

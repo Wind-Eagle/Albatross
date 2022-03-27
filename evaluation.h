@@ -56,9 +56,10 @@ class PawnHashTable {
 class Evaluator {
  public:
   Evaluator() = default;
-  search::score_t Evaluate(const core::Board& board, DEval d_eval);
+  search::score_t Evaluate(const core::Board& board, DEval d_eval, search::score_t alpha = -search::kScoreMax, search::score_t beta = search::kScoreMax);
  private:
   search::score_t EvaluationFunction(const core::Board& board, int32_t stage);
+  bool CheckLazyEval(const core::Board& board, search::score_t& score, search::score_t alpha, search::score_t beta);
   std::unique_ptr<PawnHashTable> table_ = std::make_unique<PawnHashTable>();
 };
 

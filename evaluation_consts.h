@@ -143,10 +143,11 @@ constexpr search::score_t kProtectedPassedPawn[8] = {0, 35, 27, 20, 12, 5, 0, 0}
 
 constexpr search::score_t kPawnShield[6] = {5, 63, 15, 5, 48, 0};
 constexpr search::score_t kPawnStorm[6] = {-58, -27, 0, -8, -5, 0};
-//constexpr search::score_t kPawnStorm[6] = {0, 0, 0, 0, 0, 0};
 
 constexpr int8_t kPieceTaperedWeight[7] = {0, 0, 1, 1, 2, 4, 0};
 constexpr int16_t kFullTaperedEval = 24;
+
+constexpr search::score_t kDynamicEvalThreshold = 300;
 
 void InitEvaluation();
 

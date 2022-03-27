@@ -14,7 +14,7 @@ using core::Piece;
 
 namespace uci {
 void UciStart() {
-  std::cout << "id name Albatross x64 BMI2 0.8.5 beta" << std::endl;
+  std::cout << "id name Albatross x64 BMI2 0.9 beta" << std::endl;
   std::cout << "id author Wind_Eagle" << std::endl;
   std::cout << "uciok" << std::endl;
 }
@@ -187,7 +187,7 @@ void HandleGo(core::Board& board, search::SearchLauncher& search_launcher, const
     max_depth = std::stoi(command[2]);
   } else if (command.size() >= 3) {
     fixed_time = false;
-    for (size_t i = 2; i < command.size(); i += 2) {
+    for (size_t i = 1; i < command.size(); i += 2) {
       if (command[i] == "wtime") {
         wtime = stoi(command[i + 1]);
       }

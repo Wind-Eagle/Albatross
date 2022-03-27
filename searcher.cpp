@@ -31,7 +31,7 @@ static bool IsMoveLegal(const core::Board& board) {
 
 score_t Searcher::QuiescenseSearch(score_t alpha, score_t beta, evaluation::DEval d_eval) {
   stats_.IncNodes();
-  const score_t score = evaluator_.Evaluate(board_, d_eval);
+  const score_t score = evaluator_.Evaluate(board_, d_eval, alpha, beta);
   alpha = std::max(alpha, score);
   if (alpha >= beta) {
     return beta;
