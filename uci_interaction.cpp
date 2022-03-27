@@ -14,7 +14,7 @@ using core::Piece;
 
 namespace uci {
 void UciStart() {
-  std::cout << "id name Albatross x64 BMI2 0.9 beta" << std::endl;
+  std::cout << "id name Albatross x64 BMI2 0.9.1 beta" << std::endl;
   std::cout << "id author Wind_Eagle" << std::endl;
   std::cout << "uciok" << std::endl;
 }
@@ -205,8 +205,10 @@ void HandleGo(core::Board& board, search::SearchLauncher& search_launcher, const
   if (!fixed_time) {
     if (board.move_side_ == core::Color::kWhite) {
       milliseconds_count = wtime / std::max(5, 20 - board.move_number_ / 10) + winc;
+      milliseconds_count = std::min(milliseconds_count, wtime / 2);
     } else {
       milliseconds_count = btime / std::max(5, 20 - board.move_number_ / 10) + binc;
+      milliseconds_count = std::min(milliseconds_count, btime / 2);
     }
   }
   std::vector<core::Move> moves;

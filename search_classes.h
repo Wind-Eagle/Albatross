@@ -77,9 +77,9 @@ class SearchStats {
 class SearchThread {
  public:
   inline SearchThread(SearchCommunicator& communicator,
-               TranspositionTable& table,
+               TranspositionTable& table, evaluation::Evaluator& evaluator,
                size_t id, std::mutex& write_lock)
-      : communicator_(communicator), table_(table), id_(id), write_lock_(write_lock) {}
+      : communicator_(communicator), table_(table), evaluator_(evaluator), id_(id), write_lock_(write_lock) {}
   inline const SearchStats& GetStats() const {
     return stats_;
   }
@@ -89,7 +89,7 @@ class SearchThread {
   SearchCommunicator& communicator_;
   SearchStats stats_;
   TranspositionTable& table_;
-  evaluation::Evaluator evaluator_;
+  evaluation::Evaluator& evaluator_;
   size_t id_;
   std::mutex& write_lock_;
 };

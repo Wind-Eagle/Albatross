@@ -12,6 +12,9 @@
 namespace search {
 class SearchLauncher {
  public:
+  SearchLauncher() {
+    evaluators_.resize(kThreadCount);
+  }
   ~SearchLauncher() {
     if (main_thread_.joinable()) {
       main_thread_.join();
@@ -24,6 +27,7 @@ class SearchLauncher {
  private:
   inline void StartMainThread(const core::Board& board, const std::vector<core::Move>& moves, std::chrono::milliseconds time, int max_depth);
   SearchCommunicator communicator_;
+  std::vector<evaluation::Evaluator> evaluators_;
   TranspositionTable tt_;
 
   std::thread main_thread_;

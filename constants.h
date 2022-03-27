@@ -42,6 +42,8 @@ constexpr int32_t kFutilityRevDepthThreshold = 4;
 constexpr score_t kFutilityRevMargin[5] = {0, 50, 100, 175, 250};
 constexpr int32_t kLateMoveReduction = 1;
 
+constexpr size_t kThreadCount = 1;
+
 }  // namespace search
 
 #endif  // CONSTANTS_H_

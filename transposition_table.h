@@ -71,6 +71,9 @@ class TranspositionTable {
   uint8_t GetEpoch() const {
     return epoch_;
   }
+  inline bool IsCurrentEpoch(Data data) {
+    return data.epoch_ == epoch_;
+  }
   void Clear() {
     for (size_t i = 0; i < size_; i++) {
       table_[i].data_ = Data::GetEmpty();

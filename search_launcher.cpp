@@ -25,11 +25,11 @@ inline void SearchLauncher::StartMainThread(const core::Board& board,
                                             const std::vector<core::Move>& moves,
                                             std::chrono::milliseconds time, int max_depth) {
   std::deque<SearchThread> search_threads;
-  for (size_t i = 0; i < 1; ++i) {
-    search_threads.emplace_back(communicator_, tt_, i, write_lock_);
+  for (size_t i = 0; i < kThreadCount; ++i) {
+    search_threads.emplace_back(communicator_, tt_, evaluators_[i], i, write_lock_);
   }
   std::vector<std::thread> threads;
-  for (size_t i = 0; i < 1; ++i) {
+  for (size_t i = 0; i < kThreadCount; ++i) {
     threads.emplace_back([&search_thread =
     search_threads[i], &board, &moves, &time, &max_depth]() { search_thread.Run(board, moves, time, max_depth); });
   }

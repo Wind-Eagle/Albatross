@@ -10,7 +10,7 @@ bool Searcher::MustStop() const {
     return true;
   }
   counter_++;
-  if (!(counter_ & 4095)) {
+  if (!(counter_ & 255)) {
     if (std::chrono::steady_clock::now() - start_time_ >= time_) {
       communicator_.Stop();
       return true;
@@ -144,25 +144,23 @@ inline score_t Searcher::MainSearch(int32_t depth,
     }
   };
 
-  //TODO(Wind-Eagle): check hash table
   core::Move hash_move = core::Move::GetEmptyMove();
   TranspositionTable::Data hash_data = tt_.GetData(board_.hash_);
   if (hash_data.IsValid()) {
     hash_move = hash_data.GetMove();
-    if (nt == NodeKind::kSimple && hash_data.GetDepth() >= depth && board_.move_counter_ < 90) {
+    if (nt != NodeKind::kRoot && hash_data.GetDepth() >= depth && board_.move_counter_ < 90 && (nt == NodeKind::kSimple || tt_.IsCurrentEpoch(hash_data))) {
       score_t score = AdjustCheckmate(hash_data.score_, idepth);
-      if (hash_data.flags_ & TranspositionTable::Data::kExact) {
+      bool is_cutoff = false;
+      if (hash_data.flags_ & (TranspositionTable::Data::kExact)) {
+        is_cutoff = true;
+      } else if ((hash_data.flags_ & (TranspositionTable::Data::kLowerBound)) && score >= beta) {
+        is_cutoff = true;
+      } else if ((hash_data.flags_ & (TranspositionTable::Data::kUpperBound)) && score <= alpha) {
+        is_cutoff = true;
+      }
+      if (is_cutoff) {
         best_move_depth_[idepth] = hash_data.move_;
-        tt_.AddData(board_.hash_, hash_data);
         return score;
-      } else if (hash_data.flags_ & TranspositionTable::Data::kLowerBound) {
-        if (score >= beta) {
-          return beta;
-        }
-      } else if (hash_data.flags_ & TranspositionTable::Data::kUpperBound) {
-        if (alpha >= score) {
-          return alpha;
-        }
       }
     }
   }
@@ -211,6 +209,9 @@ inline score_t Searcher::MainSearch(int32_t depth,
                                                d_eval,
                                                (flags & SearcherFlags::kInherit) | SearcherFlags::kNullMove, ext_counter);
     core::UnmakeMove(board_, core::Move::GetEmptyMove(), move_data);
+    if (MustStop()) {
+      return 0;
+    }
     if (score >= beta) {
       if (depth < kNullMoveReductionDepthThreshold) {
         return beta;
@@ -218,9 +219,6 @@ inline score_t Searcher::MainSearch(int32_t depth,
         depth -= 4;
         flags |= SearcherFlags::kNullMoveReduction;
       }
-    }
-    if (MustStop()) {
-      return 0;
     }
   }
 
@@ -291,13 +289,13 @@ inline score_t Searcher::MainSearch(int32_t depth,
                                                      -alpha,
                                                      new_eval,
                                                      new_flags | SearcherFlags::kLateMoveReduction, new_ext_counter, move);
-      if (lmr_score <= alpha) {
-        core::UnmakeMove(board_, move, move_data);
-        continue;
-      }
       if (MustStop()) {
         core::UnmakeMove(board_, move, move_data);
         return 0;
+      }
+      if (lmr_score <= alpha) {
+        core::UnmakeMove(board_, move, move_data);
+        continue;
       }
     }
 
