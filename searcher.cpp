@@ -88,6 +88,9 @@ inline score_t Searcher::Search(int32_t depth,
 }
 
 void Searcher::KillerStore(const core::Move& move, size_t idepth) {
+  if (move == first_killers_[idepth]) {
+    return;
+  }
   second_killers_[idepth] = first_killers_[idepth];
   first_killers_[idepth] = move;
 }
@@ -219,6 +222,7 @@ inline score_t Searcher::MainSearch(int32_t depth,
   MovePicker move_picker
       (board_, hash_move, first_killers_[idepth], second_killers_[idepth], history_table_, countermove_table_[(prev_move.src_ << 6) + prev_move.dst_]);
   bool alpha_improved = false;
+  size_t futile_moves_done = 0;
   size_t history_moves_done = 0;
   for (;;) {
     core::Move move;
@@ -249,6 +253,9 @@ inline score_t Searcher::MainSearch(int32_t depth,
         new_flags |= SearcherFlags::kCapture;
     }
     moves_done++;
+    if (move_picker.GetStage() > MovePicker::MoveStage::kKiller) {
+      futile_moves_done++;
+    }
     if (move_picker.GetStage() == MovePicker::MoveStage::kNone) {
       history_moves_done++;
     }
