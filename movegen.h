@@ -36,6 +36,19 @@ bool IsMoveValidColor(const Board& board, const Move& move);
 bool IsKingAttacked(const Board &board);
 bool IsOpponentKingAttacked(const Board &board);
 
+inline bool IsKillerValid(const Board& board, const Move& move) {
+  // En passant captures are never even considered as killer moves,
+  // because pawn captures are always captures
+  if (board.cells_[move.dst_] != kEmptyCell) {
+    return false;
+  }
+  if (board.move_side_ == Color::kWhite) {
+    return IsMoveValidColor<Color::kWhite>(board, move);
+  } else {
+    return IsMoveValidColor<Color::kBlack>(board, move);
+  }
+}
+
 inline bool IsMoveValid(const Board& board, const Move& move) {
   if (board.move_side_ == Color::kWhite) {
     return IsMoveValidColor<Color::kWhite>(board, move);

@@ -49,10 +49,10 @@ void MovePicker::GetNewMoves() {
     }
     case MoveStage::kKiller: {
       move_stage_ = MoveStage::kAll;
-      if (core::IsMoveValid(board_, first_killer_)) {
+      if (core::IsKillerValid(board_, first_killer_)) {
         moves_[move_count_++] = first_killer_;
       }
-      if (core::IsMoveValid(board_, second_killer_)) {
+      if (first_killer_ != second_killer_ && core::IsKillerValid(board_, second_killer_)) {
         moves_[move_count_++] = second_killer_;
       }
       /*if (countermove_ != first_killer_ && countermove_ != second_killer_ && core::IsMoveValid(board_, countermove_)) {
