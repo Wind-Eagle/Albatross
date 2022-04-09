@@ -222,6 +222,7 @@ inline score_t Searcher::MainSearch(int32_t depth,
   MovePicker move_picker
       (board_, hash_move, first_killers_[idepth], second_killers_[idepth], history_table_, countermove_table_[(prev_move.src_ << 6) + prev_move.dst_]);
   bool alpha_improved = false;
+  bool is_node_check = core::IsKingAttacked(board_);
   size_t futile_moves_done = 0;
   size_t history_moves_done = 0;
   for (;;) {
@@ -260,7 +261,7 @@ inline score_t Searcher::MainSearch(int32_t depth,
       history_moves_done++;
     }
     if (nt == NodeKind::kSimple && history_moves_done > 2 && depth >= 3 && moves_done > 0
-        && !core::IsKingAttacked(board_) && ext_depth == 0) {
+        && !is_node_check && ext_depth == 0) {
       int32_t depth_reduction = 1;
       score_t lmr_score = -Search<NodeKind::kSimple>(depth - depth_reduction - 1 + ext_depth,
                                                      idepth + 1,
