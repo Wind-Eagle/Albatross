@@ -175,7 +175,9 @@ inline score_t Searcher::MainSearch(int32_t depth,
     }
   };
 
-  if (nt == NodeKind::kSimple && (!core::IsKingAttacked(board_)) && std::abs(alpha) < kAlmostMate
+  bool is_node_check = core::IsKingAttacked(board_);
+
+  if (nt == NodeKind::kSimple && !is_node_check && std::abs(alpha) < kAlmostMate
       && std::abs(beta) < kAlmostMate && depth <= kRazoringDepthThreshold) {
     GetEvaluation();
     if (depth <= kFutilityDepthThreshold) {
@@ -193,9 +195,14 @@ inline score_t Searcher::MainSearch(int32_t depth,
       }
     }
   }
-  if (depth <= 0) {
-    return QuiescenseSearch(alpha, beta, d_eval);
+  bool node_futile = false;
+  if (nt == NodeKind::kSimple && !is_node_check && depth <= kFutilityRevDepthThreshold) {
+    GetEvaluation();
+    if (eval_score + kFutilityRevMargin[depth] <= alpha) {
+      node_futile = true;
+    }
   }
+
   if (CanPerformNullMove<nt>(board_, depth, alpha, beta, flags)) {
     core::InvertMove move_data = core::MakeMove(board_, core::Move::GetEmptyMove());
     score_t score = -Search<NodeKind::kSimple>(depth - kNullMoveR - 1,
@@ -222,7 +229,6 @@ inline score_t Searcher::MainSearch(int32_t depth,
   MovePicker move_picker
       (board_, hash_move, first_killers_[idepth], second_killers_[idepth], history_table_, countermove_table_[(prev_move.src_ << 6) + prev_move.dst_]);
   bool alpha_improved = false;
-  bool is_node_check = core::IsKingAttacked(board_);
   size_t futile_moves_done = 0;
   size_t history_moves_done = 0;
   for (;;) {
@@ -259,6 +265,10 @@ inline score_t Searcher::MainSearch(int32_t depth,
     }
     if (move_picker.GetStage() == MovePicker::MoveStage::kNone) {
       history_moves_done++;
+    }
+    if (nt == NodeKind::kSimple && node_futile && !core::IsKingAttacked(board_) && move_picker.GetStage() == MovePicker::MoveStage::kNone) {
+      core::UnmakeMove(board_, move, move_data);
+      continue;
     }
     if (nt == NodeKind::kSimple && history_moves_done > 2 && depth >= 3 && moves_done > 0
         && !is_node_check && ext_depth == 0) {
