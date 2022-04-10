@@ -77,12 +77,12 @@ inline score_t Searcher::Search(int32_t depth,
                                 score_t beta,
                                 evaluation::DEval d_eval,
                                 SearcherFlags flags,
-                                int32_t ext_counter, core::Move prev_move) {
+                                int32_t ext_counter) {
   tt_.Prefetch(board_.hash_);
   if (!repetitions_.InsertRepetition(board_.hash_)) {
     return 0;
   }
-  score_t score = MainSearch<nt>(depth, idepth, alpha, beta, d_eval, flags, ext_counter, prev_move);
+  score_t score = MainSearch<nt>(depth, idepth, alpha, beta, d_eval, flags, ext_counter);
   repetitions_.EraseRepetition(board_.hash_);
   return score;
 }
@@ -113,7 +113,7 @@ inline score_t Searcher::MainSearch(int32_t depth,
                                     score_t beta,
                                     evaluation::DEval d_eval,
                                     SearcherFlags flags,
-                                    int32_t ext_counter, core::Move prev_move) {
+                                    int32_t ext_counter) {
   if (depth <= 0) {
     return QuiescenseSearch(alpha, beta, d_eval);
   }
@@ -210,7 +210,8 @@ inline score_t Searcher::MainSearch(int32_t depth,
                                                -beta,
                                                -beta + 1,
                                                d_eval,
-                                               (flags & SearcherFlags::kInherit) | SearcherFlags::kNullMove, ext_counter);
+                                               (flags & SearcherFlags::kInherit)
+                                                   | SearcherFlags::kNullMove, ext_counter);
     core::UnmakeMove(board_, core::Move::GetEmptyMove(), move_data);
     if (MustStop()) {
       return 0;
@@ -227,7 +228,7 @@ inline score_t Searcher::MainSearch(int32_t depth,
 
   size_t moves_done = 0;
   MovePicker move_picker
-      (board_, hash_move, first_killers_[idepth], second_killers_[idepth], history_table_, countermove_table_[(prev_move.src_ << 6) + prev_move.dst_]);
+      (board_, hash_move, first_killers_[idepth], second_killers_[idepth], history_table_);
   bool alpha_improved = false;
   size_t futile_moves_done = 0;
   size_t history_moves_done = 0;
@@ -282,7 +283,7 @@ inline score_t Searcher::MainSearch(int32_t depth,
                                                      -alpha - 1,
                                                      -alpha,
                                                      new_eval,
-                                                     new_flags | SearcherFlags::kLateMoveReduction, new_ext_counter, move);
+                                                     new_flags | SearcherFlags::kLateMoveReduction, new_ext_counter);
       if (MustStop()) {
         core::UnmakeMove(board_, move, move_data);
         return 0;
@@ -306,12 +307,12 @@ inline score_t Searcher::MainSearch(int32_t depth,
                                      -alpha - 1,
                                      -alpha,
                                      new_eval,
-                                     new_flags, new_ext_counter, move);
+                                     new_flags, new_ext_counter);
       new_score = (new_score <= alpha ? alpha : alpha + 1);
     }
     if (!do_pv_search || (alpha < new_score && (nt == NodeKind::kRoot || new_score < beta))) {
       const NodeKind new_nt = (nt == NodeKind::kSimple ? NodeKind::kSimple : NodeKind::kPV);
-      new_score = -Search<new_nt>(depth - 1 + ext_depth, idepth + 1, -beta, -alpha, new_eval, new_flags, new_ext_counter, move);
+      new_score = -Search<new_nt>(depth - 1 + ext_depth, idepth + 1, -beta, -alpha, new_eval, new_flags, new_ext_counter);
     }
     core::UnmakeMove(board_, move, move_data);
     if (MustStop()) {
@@ -329,7 +330,6 @@ inline score_t Searcher::MainSearch(int32_t depth,
       if (move_picker.GetStage() > MovePicker::MoveStage::kKiller) {
         KillerStore(move, idepth);
         HistoryStore(move, depth);
-        countermove_table_[(prev_move.src_ << 6) + prev_move.dst_] = move;
       }
       return beta;
     }
@@ -360,5 +360,5 @@ template score_t Searcher::MainSearch<Searcher::NodeKind::kRoot>(int32_t depth,
                                                                  score_t alpha,
                                                                  score_t beta,
                                                                  evaluation::DEval d_eval,
-                                                                 SearcherFlags flags, int32_t ext_counter, core::Move prev_move);
+                                                                 SearcherFlags flags, int32_t ext_counter);
 }  // namespace search
