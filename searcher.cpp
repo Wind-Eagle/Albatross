@@ -256,6 +256,10 @@ inline score_t Searcher::MainSearch(int32_t depth,
     int32_t new_ext_counter = ext_counter;
     int32_t ext_depth = 0;
 
+    if (depth == 1 && core::IsKingAttacked(board_)) {
+      ext_depth++;
+    }
+
     if (is_move_capture) {
         new_flags |= SearcherFlags::kCapture;
     }
