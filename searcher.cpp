@@ -271,7 +271,7 @@ inline score_t Searcher::MainSearch(int32_t depth,
     if (move_picker.GetStage() == MovePicker::MoveStage::kNone) {
       history_moves_done++;
     }
-    if (nt == NodeKind::kSimple && node_futile && !core::IsKingAttacked(board_) && move_picker.GetStage() == MovePicker::MoveStage::kNone) {
+    if (nt == NodeKind::kSimple && node_futile && !core::IsKingAttacked(board_) && move_picker.GetStage() == MovePicker::MoveStage::kNone && ext_depth == 0) {
       core::UnmakeMove(board_, move, move_data);
       continue;
     }
