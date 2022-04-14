@@ -31,7 +31,7 @@ constexpr score_t kAlmostMate = 24999;
 constexpr score_t kMate = 29999;
 constexpr score_t kStalemate = 0;
 
-constexpr int32_t kNullMoveDepthThreshold = 1;
+constexpr int32_t kNullMoveDepthThreshold = 2;
 constexpr int32_t kNullMoveReductionDepthThreshold = 5;
 constexpr int32_t kNullMoveR = 3;
 constexpr int32_t kFutilityDepthThreshold = 4;

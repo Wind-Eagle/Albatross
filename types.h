@@ -68,7 +68,7 @@ namespace search {
     kRazoring = 15,
     kAll = 31,
     kInherit = (kNullMove | kNullMoveReduction | kLateMoveReduction),
-    kNullMoveDisable = kNone
+    kNullMoveDisable = kNullMoveReduction
   };
   ENUM_TO_INT(SearcherFlags, uint8_t)
 
