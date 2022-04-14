@@ -257,7 +257,20 @@ inline score_t Searcher::MainSearch(int32_t depth,
     int32_t new_ext_counter = ext_counter;
     int32_t ext_depth = 0;
 
-    if (depth == 1 && core::IsKingAttacked(board_)) {
+    if (nt == NodeKind::kPV) {
+      if (core::IsKingAttacked(board_)) {
+        new_ext_counter += 32;
+      }
+    } else if (nt == NodeKind::kRoot) {
+      if (core::IsKingAttacked(board_)) {
+        new_ext_counter += 16;
+      }
+    }
+
+    ext_depth = new_ext_counter / 32;
+    new_ext_counter %= 32;
+
+    if (depth + ext_depth <= 1 && core::IsKingAttacked(board_)) {
       ext_depth++;
     }
 
