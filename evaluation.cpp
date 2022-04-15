@@ -206,9 +206,48 @@ static search::score_t EvaluateKing(const core::Board& board, int32_t stage) {
   return score;
 }
 
+template <core::Color c>
+static search::score_t EvaluateMaterialColor([[maybe_unused]]const core::Board& board, [[maybe_unused]]int32_t stage) {
+  search::score_t score = 0;
+  return score;
+}
+
+static search::score_t EvaluateMaterial([[maybe_unused]]const core::Board& board, [[maybe_unused]]int32_t stage) {
+  search::score_t score = 0;
+  score += EvaluateMaterialColor<core::Color::kWhite>(board, stage);
+  score -= EvaluateMaterialColor<core::Color::kBlack>(board, stage);
+  return score;
+}
+
+template <core::Color c>
+static search::score_t EvaluatePiecesColor(const core::Board& board, [[maybe_unused]]int32_t stage) {
+  search::score_t score = 0;
+  core::bitboard_t b_pieces = board.b_pieces_[core::MakeCell(c, core::Piece::kRook)];
+  while (b_pieces) {
+    core::coord_t cell = core::ExtractLowest(b_pieces);
+    if ((core::kBitboardColumns[core::GetY(cell)] & board.b_pieces_[core::MakeCell(c, core::Piece::kPawn)]) == 0) {
+      if ((core::kBitboardColumns[core::GetY(cell)] & board.b_pieces_[core::MakeCell(core::GetInvertedColor(c), core::Piece::kPawn)]) == 0) {
+        score += kRookOpenCol;
+      } else {
+        score += kRookSemiOpenCol;
+      }
+    }
+  }
+  return score;
+}
+
+static search::score_t EvaluatePieces(const core::Board& board, [[maybe_unused]]int32_t stage) {
+  search::score_t score = 0;
+  score += EvaluatePiecesColor<core::Color::kWhite>(board, stage);
+  score -= EvaluatePiecesColor<core::Color::kBlack>(board, stage);
+  return score;
+}
+
 search::score_t Evaluator::EvaluationFunction(const core::Board& board, int32_t stage) {
   search::score_t score = 0;
   score += EvaluatePawns(board, table_);
+  //score += EvaluateMaterial(board, stage);
+  score += EvaluatePieces(board, stage);
   score += EvaluateKing(board, stage);
   return score;
 }
