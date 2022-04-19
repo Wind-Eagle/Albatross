@@ -8,6 +8,7 @@
 #include "evaluation.h"
 #include <iostream>
 #include <string>
+#include <fstream>
 
 using core::Color;
 using core::Piece;
@@ -44,7 +45,8 @@ void PrintBoardsComparasion(core::Board& old_board, core::Board& board) {
       std::cout << "b_black_" << std::endl;
     }
     if (old_board.en_passant_coord_ != board.en_passant_coord_) {
-      std::cout << "b_en_passant_coord_" << (int)old_board.en_passant_coord_<<" "<<(int)board.en_passant_coord_<<std::endl;
+      std::cout << "b_en_passant_coord_" << (int) old_board.en_passant_coord_ << " "
+                << (int) board.en_passant_coord_ << std::endl;
     }
     if (old_board.castling_ != board.castling_) {
       std::cout << "b_castling_" << std::endl;
@@ -168,7 +170,9 @@ void HandlePositionMoves(const std::vector<std::string>& command) {
   PrintBoardsComparasion(old_board, board);
 }
 
-void HandleGo(core::Board& board, search::SearchLauncher& search_launcher, const std::vector<std::string>& command) {
+void HandleGo(core::Board& board,
+              search::SearchLauncher& search_launcher,
+              const std::vector<std::string>& command) {
   int milliseconds_count = (1LL << 31) - 1;
   bool fixed_time = true;
   int max_depth = 255;
@@ -218,12 +222,59 @@ void HandleGo(core::Board& board, search::SearchLauncher& search_launcher, const
 void HandleCost([[maybe_unused]]core::Board& board) {
   evaluation::DEval d_eval(board);
   evaluation::Evaluator evaluator;
-  std::cout<<evaluator.Evaluate(board, d_eval)<<std::endl;
+  std::cout << evaluator.Evaluate(board, d_eval) << std::endl;
+}
+
+void HandleAvCost() {
+  std::ifstream fin("evaluation.sgs");
+  std::string s;
+  double ans = 0;
+  core::Board board;
+  size_t cnt = 0;
+  size_t pos_cost = 0;
+  while (getline(fin, s)) {
+    cnt++;
+    double res = 0.5;
+    if (s[5] == 'W') {
+      res = 1;
+    } else if (s[5] == 'B') {
+      res = 0;
+    }
+    getline(fin, s);
+    getline(fin, s);
+    getline(fin, s);
+    std::vector<std::string> ps = core::ParseLine(s);
+    board.SetStartPos();
+    evaluation::Evaluator evaluator;
+    evaluation::DEval d_eval(board);
+    for (size_t i = 1; i < ps.size(); i++) {
+      core::Move move = core::StringToMove(board, ps[i]);
+      bool is_move_capture = (move.type_ == core::MoveType::kEnPassant || board.cells_[move.dst_] != core::kEmptyCell);
+      d_eval.UpdateTag(board, core::StringToMove(board, ps[i]));
+      MakeMove(board, core::StringToMove(board, ps[i]));
+      if (is_move_capture || core::IsMovePromotion(move)) {
+        continue;
+      }
+      if (i > 10) {
+        search::score_t score = evaluator.Evaluate(board, d_eval);
+        if (board.move_side_ == core::Color::kBlack) {
+          score = -score;
+        }
+        double sscore = 1.0 / (1.0 + std::pow(10, static_cast<double>(-score) / 100 / 4));
+        ans += (sscore - res) * (sscore - res);
+        pos_cost++;
+      }
+    }
+    getline(fin, s);
+  }
+  std::cout << "Total is: " << ans << std::endl;
+  std::cout << "Average is: " << ans / pos_cost << std::endl;
+  std::cout << "Gained from " << pos_cost << " positions" << std::endl;
 }
 
 void CheckEasterEgg(const std::vector<std::string>& command) {
   if (command[0] == "sofcheck") {
-    std::cout<<"SoFCheck <3"<<std::endl;
+    std::cout << "SoFCheck <3" << std::endl;
   }
 }
 
@@ -248,6 +299,8 @@ void StartUciInteraction() {
       HandleGo(board, search_launcher, parsed_command);
     } else if (parsed_command[0] == "cost") {
       HandleCost(board);
+    } else if (parsed_command[0] == "avcost") {
+      HandleAvCost();
     } else if (parsed_command[0] == "ucinewgame") {
       search_launcher.NewGame();
     } else if (parsed_command[0] == "stop") {
