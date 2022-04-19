@@ -1,26 +1,35 @@
 #include "evaluation.h"
 #include "evaluation_consts.h"
 
+extern core::bitboard_t kWhitePawnReversedAttacks[64], kBlackPawnReversedAttacks[64];
+
 namespace evaluation {
 search::ScorePair kPSQ[16][64];
 core::bitboard_t kWhitePassedPawnBitboard[64], kBlackPassedPawnBitboard[64];
 core::bitboard_t kWhiteOpenPawnBitboard[64], kBlackOpenPawnBitboard[64];
 core::bitboard_t kIsolatedPawnBitboard[64];
-extern core::bitboard_t kWhitePawnReversedAttacks[64], kBlackPawnReversedAttacks[64];
+core::bitboard_t kIsolatedPieceBitboard[64];
 
 search::score_t kPawnShieldCost[8][8], kPawnStormCost[8][8];
 search::score_t kPawnShieldCostInv[8][8], kPawnStormCostInv[8][8];
 
 void InitEvaluation() {
-  for (core::Color c : {core::Color::kWhite, core::Color::kBlack}) {
-    for (core::Piece p : {core::Piece::kPawn, core::Piece::kKnight, core::Piece::kBishop, core::Piece::kRook, core::Piece::kQueen, core::Piece::kKing}) {
+  for (core::Color c: {core::Color::kWhite, core::Color::kBlack}) {
+    for (core::Piece p: {core::Piece::kPawn, core::Piece::kKnight, core::Piece::kBishop,
+                         core::Piece::kRook, core::Piece::kQueen, core::Piece::kKing}) {
       for (core::coord_t i = 0; i < 64; i++) {
         if (c == core::Color::kWhite) {
-          kPSQ[core::MakeCell(c, p)][i] = search::ScorePair(kPieceFirstPSQ[static_cast<int>(p) - 1][i] + kPieceFirstWeight[static_cast<int>(p) - 1],
-                                                    kPieceSecondPSQ[static_cast<int>(p) - 1][i] + kPieceSecondWeight[static_cast<int>(p) - 1]);
+          kPSQ[core::MakeCell(c, p)][i] = search::ScorePair(
+              kPieceFirstPSQ[static_cast<int>(p) - 1][i]
+                  + kPieceFirstWeight[static_cast<int>(p) - 1],
+              kPieceSecondPSQ[static_cast<int>(p) - 1][i]
+                  + kPieceSecondWeight[static_cast<int>(p) - 1]);
         } else {
-          kPSQ[core::MakeCell(c, p)][i] = search::ScorePair(-kPieceFirstPSQ[static_cast<int>(p) - 1][i ^ 56] - kPieceFirstWeight[static_cast<int>(p) - 1],
-                                                            -kPieceSecondPSQ[static_cast<int>(p) - 1][i ^ 56] - kPieceSecondWeight[static_cast<int>(p) - 1]);
+          kPSQ[core::MakeCell(c, p)][i] = search::ScorePair(
+              -kPieceFirstPSQ[static_cast<int>(p) - 1][i ^ 56]
+                  - kPieceFirstWeight[static_cast<int>(p) - 1],
+              -kPieceSecondPSQ[static_cast<int>(p) - 1][i ^ 56]
+                  - kPieceSecondWeight[static_cast<int>(p) - 1]);
         }
       }
     }
@@ -43,6 +52,9 @@ void InitEvaluation() {
       }
       if (std::abs(core::GetY(j) - y) == 1) {
         kIsolatedPawnBitboard[i] |= (1ULL << j);
+      }
+      if (std::abs(core::GetY(j) - y) <= 1) {
+        kIsolatedPieceBitboard[i] |= (1ULL << j);
       }
     }
   }
@@ -82,20 +94,24 @@ static search::score_t EvaluateKingColor(const core::Board& board, int32_t stage
   search::score_t score = 0;
   if constexpr (c == core::Color::kWhite) {
     if (board.b_pieces_[core::MakeCell('q')] != 0) {
-      score -= kQueenDistance[GetDistance(core::GetLowest(board.b_pieces_[core::MakeCell('q')]), board.GetKingPosition<core::Color::kWhite>())];
+      score -= kQueenDistance[GetDistance(core::GetLowest(board.b_pieces_[core::MakeCell('q')]),
+                                          board.GetKingPosition<core::Color::kWhite>())];
     }
   } else {
     if (board.b_pieces_[core::MakeCell('Q')] != 0) {
-      score -= kQueenDistance[GetDistance(core::GetLowest(board.b_pieces_[core::MakeCell('Q')]), board.GetKingPosition<core::Color::kBlack>())];
+      score -= kQueenDistance[GetDistance(core::GetLowest(board.b_pieces_[core::MakeCell('Q')]),
+                                          board.GetKingPosition<core::Color::kBlack>())];
     }
   }
 
   core::subcoord_t x = core::GetX(board.GetKingPosition<c>());
   core::subcoord_t y = core::GetY(board.GetKingPosition<c>());
-  if (!board.IsKingsideCastling(c) && !board.IsQueensideCastling(c) && ((c == core::Color::kWhite && x < 2) || (c == core::Color::kBlack && x > 5))) {
+  if (!board.IsKingsideCastling(c) && !board.IsQueensideCastling(c)
+      && ((c == core::Color::kWhite && x < 2) || (c == core::Color::kBlack && x > 5))) {
     search::score_t safety_score = 0;
     core::bitboard_t our_pawns = board.b_pieces_[core::MakeCell(c, core::Piece::kPawn)];
-    core::bitboard_t enemy_pawns = board.b_pieces_[core::MakeCell(core::GetInvertedColor(c), core::Piece::kPawn)];
+    core::bitboard_t enemy_pawns =
+        board.b_pieces_[core::MakeCell(core::GetInvertedColor(c), core::Piece::kPawn)];
 
     core::coord_t shift1 = (c == core::Color::kBlack) ? (y + 47 - (7 - x) * 8) : (y + 7 + x * 8);
     core::coord_t shift2 = (c == core::Color::kBlack) ? (y + 39 - (7 - x) * 8) : (y + 15 + x * 8);
@@ -130,12 +146,16 @@ static search::score_t EvaluatePawnsColor(const core::Board& board) {
   search::score_t score = 0;
   core::bitboard_t b_pieces = board.b_pieces_[core::MakeCell(c, core::Piece::kPawn)];
   core::bitboard_t our_pawns = board.b_pieces_[core::MakeCell(c, core::Piece::kPawn)];
-  core::bitboard_t enemy_pawns = board.b_pieces_[core::MakeCell(core::GetInvertedColor(c), core::Piece::kPawn)];
-  core::bitboard_t all_pawns = board.b_pieces_[core::MakeCell(c, core::Piece::kPawn)] | board.b_pieces_[core::MakeCell(core::GetInvertedColor(c), core::Piece::kPawn)];
+  core::bitboard_t
+      enemy_pawns = board.b_pieces_[core::MakeCell(core::GetInvertedColor(c), core::Piece::kPawn)];
+  core::bitboard_t all_pawns = board.b_pieces_[core::MakeCell(c, core::Piece::kPawn)]
+      | board.b_pieces_[core::MakeCell(core::GetInvertedColor(c), core::Piece::kPawn)];
   core::bitboard_t left =
-      (c == core::Color::kWhite ? (our_pawns & (~core::kBitboardColumns[0])) << 7 : (our_pawns & (~core::kBitboardColumns[0])) >> 9);
+      (c == core::Color::kWhite ? (our_pawns & (~core::kBitboardColumns[0])) << 7 :
+       (our_pawns & (~core::kBitboardColumns[0])) >> 9);
   core::bitboard_t right =
-      (c == core::Color::kWhite ? (our_pawns & (~core::kBitboardColumns[7])) << 9 : (our_pawns & (~core::kBitboardColumns[7])) >> 7);
+      (c == core::Color::kWhite ? (our_pawns & (~core::kBitboardColumns[7])) << 9 :
+       (our_pawns & (~core::kBitboardColumns[7])) >> 7);
   core::bitboard_t attacks = (left | right);
   score += __builtin_popcountll(our_pawns & attacks) * kProtectedPawn;
   while (b_pieces) {
@@ -184,18 +204,21 @@ static search::score_t EvaluatePawnsColor(const core::Board& board) {
   return score;
 }
 
-static search::score_t EvaluatePawns(const core::Board& board, const std::unique_ptr<PawnHashTable>& table) {
+static search::score_t EvaluatePawns(const core::Board& board,
+                                     const std::unique_ptr<PawnHashTable>& table) {
   search::score_t score = 0;
-  core::bitboard_t white_pawns = board.b_pieces_[core::MakeCell(core::Color::kWhite, core::Piece::kPawn)];
-  core::bitboard_t black_pawns = board.b_pieces_[core::MakeCell(core::Color::kBlack, core::Piece::kPawn)];
+  core::bitboard_t
+      white_pawns = board.b_pieces_[core::MakeCell(core::Color::kWhite, core::Piece::kPawn)];
+  core::bitboard_t
+      black_pawns = board.b_pieces_[core::MakeCell(core::Color::kBlack, core::Piece::kPawn)];
   uint64_t hash = core::GetHash16(white_pawns, black_pawns);
-  search::score_t hash_score = table -> Get(hash);
+  search::score_t hash_score = table->Get(hash);
   if (hash_score != search::kScoreMax) {
     return hash_score;
   }
   score += EvaluatePawnsColor<core::Color::kWhite>(board);
   score -= EvaluatePawnsColor<core::Color::kBlack>(board);
-  table -> Add(hash, score);
+  table->Add(hash, score);
   return score;
 }
 
@@ -206,39 +229,63 @@ static search::score_t EvaluateKing(const core::Board& board, int32_t stage) {
   return score;
 }
 
-template <core::Color c>
-static search::score_t EvaluateMaterialColor([[maybe_unused]]const core::Board& board, [[maybe_unused]]int32_t stage) {
+template<core::Color c>
+static search::score_t EvaluateMaterialColor([[maybe_unused]]const core::Board& board,
+                                             [[maybe_unused]]int32_t stage) {
   search::score_t score = 0;
+
+  if (__builtin_popcountll(board.b_pieces_[core::MakeCell(c, core::Piece::kKnight)]) >= 2) {
+    score += kKnightPair;
+  }
+  if (__builtin_popcountll(board.b_pieces_[core::MakeCell(c, core::Piece::kBishop)]) >= 2) {
+    score += kBishopPair;
+  }
+  if (__builtin_popcountll(board.b_pieces_[core::MakeCell(c, core::Piece::kRook)]) >= 2) {
+    score += kRookPair;
+  }
   return score;
 }
 
-static search::score_t EvaluateMaterial([[maybe_unused]]const core::Board& board, [[maybe_unused]]int32_t stage) {
+static search::score_t EvaluateMaterial([[maybe_unused]]const core::Board& board,
+                                        [[maybe_unused]]int32_t stage) {
   search::score_t score = 0;
   score += EvaluateMaterialColor<core::Color::kWhite>(board, stage);
   score -= EvaluateMaterialColor<core::Color::kBlack>(board, stage);
   return score;
 }
 
-template <core::Color c>
-static search::score_t EvaluatePiecesColor(const core::Board& board, [[maybe_unused]]int32_t stage) {
+template<core::Color c>
+static search::score_t EvaluatePiecesColor(const core::Board& board,
+                                           [[maybe_unused]]int32_t stage) {
   search::score_t score = 0;
   core::bitboard_t b_pieces = board.b_pieces_[core::MakeCell(c, core::Piece::kRook)];
+  core::cell_t opponent_queen = board.b_pieces_[core::MakeCell(core::GetInvertedColor(c), core::Piece::kQueen)];
   while (b_pieces) {
     core::coord_t cell = core::ExtractLowest(b_pieces);
-    if ((core::kBitboardColumns[core::GetY(cell)] & board.b_pieces_[core::MakeCell(c, core::Piece::kPawn)]) == 0) {
-      if ((core::kBitboardColumns[core::GetY(cell)] & board.b_pieces_[core::MakeCell(core::GetInvertedColor(c), core::Piece::kPawn)]) == 0) {
+    if ((core::kBitboardColumns[core::GetY(cell)]
+        & board.b_pieces_[core::MakeCell(c, core::Piece::kPawn)]) == 0) {
+      if ((core::kBitboardColumns[core::GetY(cell)]
+          & board.b_pieces_[core::MakeCell(core::GetInvertedColor(c), core::Piece::kPawn)]) == 0) {
         score += kRookOpenCol;
-        if (std::abs(core::GetY(board.GetKingPosition<core::GetInvertedColor(c)>()) - core::GetY(cell)) <= 1) {
+        if (std::abs(
+            core::GetY(board.GetKingPosition<core::GetInvertedColor(c)>()) - core::GetY(cell))
+            <= 1) {
           score += kRookOpenKingCol;
         }
       } else {
         score += kRookSemiOpenCol;
-        if (std::abs(core::GetY(board.GetKingPosition<core::GetInvertedColor(c)>()) - core::GetY(cell)) <= 1) {
+        if (std::abs(
+            core::GetY(board.GetKingPosition<core::GetInvertedColor(c)>()) - core::GetY(cell))
+            <= 1) {
           score += kRookSemiOpenKingCol;
         }
       }
     }
+    if (opponent_queen & core::kBitboardColumns[core::GetY(cell)]) {
+      score += kRookOpposingQueen;
+    }
   }
+
   return score;
 }
 
@@ -252,13 +299,16 @@ static search::score_t EvaluatePieces(const core::Board& board, [[maybe_unused]]
 search::score_t Evaluator::EvaluationFunction(const core::Board& board, int32_t stage) {
   search::score_t score = 0;
   score += EvaluatePawns(board, table_);
-  //score += EvaluateMaterial(board, stage);
+  score += EvaluateMaterial(board, stage);
   score += EvaluatePieces(board, stage);
   score += EvaluateKing(board, stage);
   return score;
 }
 
-bool Evaluator::CheckLazyEval(const core::Board& board, search::score_t& score, search::score_t alpha, search::score_t beta) {
+bool Evaluator::CheckLazyEval(const core::Board& board,
+                              search::score_t& score,
+                              search::score_t alpha,
+                              search::score_t beta) {
   search::score_t cur_score = score;
   if (board.move_side_ == core::Color::kBlack) {
     cur_score = -cur_score;
@@ -274,10 +324,14 @@ bool Evaluator::CheckLazyEval(const core::Board& board, search::score_t& score, 
   return false;
 }
 
-search::score_t Evaluator::Evaluate(const core::Board& board, DEval d_eval, search::score_t alpha, search::score_t beta) {
+search::score_t Evaluator::Evaluate(const core::Board& board,
+                                    DEval d_eval,
+                                    search::score_t alpha,
+                                    search::score_t beta) {
   search::ScorePair scorep = d_eval.GetScore();
   int stage = (static_cast<int>(d_eval.GetStage()) * 256 + kFullTaperedEval) / kFullTaperedEval;
-  search::score_t score = (static_cast<int32_t>(scorep.GetFirst()) * stage + static_cast<int32_t>(scorep.GetSecond()) * (256 - stage)) / 256;
+  search::score_t score = (static_cast<int32_t>(scorep.GetFirst()) * stage
+      + static_cast<int32_t>(scorep.GetSecond()) * (256 - stage)) / 256;
   if (CheckLazyEval(board, score, alpha, beta)) {
     return score;
   }
