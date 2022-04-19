@@ -228,8 +228,14 @@ static search::score_t EvaluatePiecesColor(const core::Board& board, [[maybe_unu
     if ((core::kBitboardColumns[core::GetY(cell)] & board.b_pieces_[core::MakeCell(c, core::Piece::kPawn)]) == 0) {
       if ((core::kBitboardColumns[core::GetY(cell)] & board.b_pieces_[core::MakeCell(core::GetInvertedColor(c), core::Piece::kPawn)]) == 0) {
         score += kRookOpenCol;
+        if (std::abs(core::GetY(board.GetKingPosition<core::GetInvertedColor(c)>()) - core::GetY(cell)) <= 1) {
+          score += kRookOpenKingCol;
+        }
       } else {
         score += kRookSemiOpenCol;
+        if (std::abs(core::GetY(board.GetKingPosition<core::GetInvertedColor(c)>()) - core::GetY(cell)) <= 1) {
+          score += kRookSemiOpenKingCol;
+        }
       }
     }
   }
