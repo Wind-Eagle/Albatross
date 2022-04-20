@@ -230,6 +230,7 @@ inline score_t Searcher::MainSearch(int32_t depth,
   MovePicker move_picker
       (board_, hash_move, first_killers_[idepth], second_killers_[idepth], history_table_);
   bool alpha_improved = false;
+  bool was_extension = false;
   size_t futile_moves_done = 0;
   size_t history_moves_done = 0;
   for (;;) {
@@ -261,16 +262,17 @@ inline score_t Searcher::MainSearch(int32_t depth,
       if (core::IsKingAttacked(board_)) {
         new_ext_counter += 32;
       }
-    } else if (nt == NodeKind::kRoot) {
-      if (core::IsKingAttacked(board_)) {
-        new_ext_counter += 16;
-      }
+    }
+
+    if (new_ext_counter > ext_counter) {
+      was_extension = true;
     }
 
     ext_depth = new_ext_counter / 32;
     new_ext_counter %= 32;
 
     if (depth + ext_depth <= 1 && core::IsKingAttacked(board_)) {
+      was_extension = true;
       ext_depth++;
     }
 
@@ -284,12 +286,12 @@ inline score_t Searcher::MainSearch(int32_t depth,
     if (move_picker.GetStage() == MovePicker::MoveStage::kNone) {
       history_moves_done++;
     }
-    if (nt == NodeKind::kSimple && node_futile && !core::IsKingAttacked(board_) && move_picker.GetStage() == MovePicker::MoveStage::kNone) {
+    if (nt == NodeKind::kSimple && node_futile && !core::IsKingAttacked(board_) && move_picker.GetStage() == MovePicker::MoveStage::kNone && !was_extension) {
       core::UnmakeMove(board_, move, move_data);
       continue;
     }
     if (nt == NodeKind::kSimple && history_moves_done > 2 && depth >= 3 && moves_done > 0
-        && !is_node_check && ext_depth == 0) {
+        && !is_node_check && !was_extension) {
       int32_t depth_reduction = 1;
       score_t lmr_score = -Search<NodeKind::kSimple>(depth - depth_reduction - 1 + ext_depth,
                                                      idepth + 1,
