@@ -133,13 +133,12 @@ constexpr search::score_t kPieceFirstWeight[6] = {70, 327, 340, 530, 1000, 0};
 constexpr search::score_t kPieceSecondWeight[6] = {130, 327, 340, 530, 1000, 0};
 constexpr search::score_t kQueenDistance[12] = {0, 100, 55, 35, 20, 15, 7, 3, 0, 0, 0};
 
-constexpr search::score_t kPassedPawn[8] = {0, 70, 55, 40, 25, 10, 0, 0};
+constexpr search::score_t kPassedPawn[8] = {0, 85, 45, 30, 15, 5, 0, 0};
 constexpr search::score_t kDoublePawn = -17;
 constexpr search::score_t kIsolatedPawn = -16;
 constexpr search::score_t kIsolatedPassedPawn = -27;
-constexpr search::score_t kOpenPawn = 5;
 constexpr search::score_t kProtectedPawn = 5;
-constexpr search::score_t kProtectedPassedPawn[8] = {0, 35, 27, 20, 12, 5, 0, 0};
+constexpr search::score_t kProtectedPassedPawn[8] = {0, 75, 20, 10, 5, 0, 0, 0};
 
 constexpr search::score_t kPawnShield[6] = {5, 63, 15, 5, 48, 0};
 constexpr search::score_t kPawnStorm[6] = {-58, -27, 0, -8, -5, 0};
