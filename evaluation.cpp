@@ -255,7 +255,8 @@ static search::score_t EvaluatePiecesColor(const core::Board& board,
                                            [[maybe_unused]]int32_t stage) {
   search::score_t score = 0;
   core::bitboard_t b_pieces = board.b_pieces_[core::MakeCell(c, core::Piece::kRook)];
-  core::cell_t opponent_queen = board.b_pieces_[core::MakeCell(core::GetInvertedColor(c), core::Piece::kQueen)];
+  core::cell_t opponent_queen =
+      board.b_pieces_[core::MakeCell(core::GetInvertedColor(c), core::Piece::kQueen)];
   while (b_pieces) {
     core::coord_t cell = core::ExtractLowest(b_pieces);
     if ((core::kBitboardColumns[core::GetY(cell)]
@@ -320,6 +321,60 @@ bool Evaluator::CheckLazyEval(const core::Board& board,
   return false;
 }
 
+template<core::Color c>
+static bool CheckDrawColor(const core::Board& board, search::score_t& score) {
+  if (__builtin_popcountll(board.b_all_) == 2) {
+    score = 0;
+    return true;
+  }
+  if (__builtin_popcountll(board.b_all_) == 3) {
+    if (board.b_pieces_[core::MakeCell(c, core::Piece::kBishop)] > 0) {
+      score = 0;
+      return true;
+    }
+    if (board.b_pieces_[core::MakeCell(c, core::Piece::kKnight)] > 0) {
+      score = 0;
+      return true;
+    }
+  }
+  return false;
+}
+
+static bool CheckDraw(const core::Board& board, search::score_t& score) {
+  if (CheckDrawColor<core::Color::kWhite>(board, score)) {
+    return true;
+  }
+  if (CheckDrawColor<core::Color::kBlack>(board, score)) {
+    return true;
+  }
+  return false;
+}
+
+template<core::Color c>
+static bool CheckWinColor(const core::Board& board, search::score_t& score) {
+  if (board.b_pieces_[core::MakeCell(core::GetInvertedColor(c), core::Piece::kKing)] == (c == core::Color::kWhite ? board.b_black_ : board.b_white_)) {
+    if (board.b_pieces_[core::MakeCell(c, core::Piece::kQueen)] > 0) {
+      score *= 3;
+      return score;
+    }
+    if (board.b_pieces_[core::MakeCell(c, core::Piece::kRook)] > 0) {
+      score *= 3;
+      return score;
+    }
+  }
+  return false;
+}
+
+static bool CheckWin(const core::Board& board, search::score_t& score) {
+  if (CheckWinColor<core::Color::kWhite>(board, score)) {
+    return true;
+  }
+  if (CheckWinColor<core::Color::kBlack>(board, score)) {
+    return true;
+  }
+  return false;
+}
+
 search::score_t Evaluator::Evaluate(const core::Board& board,
                                     DEval d_eval,
                                     search::score_t alpha,
@@ -328,6 +383,18 @@ search::score_t Evaluator::Evaluate(const core::Board& board,
   int stage = (static_cast<int>(d_eval.GetStage()) * 256 + kFullTaperedEval) / kFullTaperedEval;
   search::score_t score = (static_cast<int32_t>(scorep.GetFirst()) * stage
       + static_cast<int32_t>(scorep.GetSecond()) * (256 - stage)) / 256;
+  if (CheckDraw(board, score)) {
+    if (board.move_side_ == core::Color::kBlack) {
+      score = -score;
+    }
+    return score;
+  }
+  if (CheckWin(board, score)) {
+    if (board.move_side_ == core::Color::kBlack) {
+      score = -score;
+    }
+    return score;
+  }
   if (CheckLazyEval(board, score, alpha, beta)) {
     return score;
   }
