@@ -104,11 +104,11 @@ static search::score_t EvaluateKingColor(const core::Board& board, int32_t stage
     }
   }
 
+  search::score_t safety_score = 0;
   core::subcoord_t x = core::GetX(board.GetKingPosition<c>());
   core::subcoord_t y = core::GetY(board.GetKingPosition<c>());
   if (!board.IsKingsideCastling(c) && !board.IsQueensideCastling(c)
       && ((c == core::Color::kWhite && x < 2) || (c == core::Color::kBlack && x > 5))) {
-    search::score_t safety_score = 0;
     core::bitboard_t our_pawns = board.b_pieces_[core::MakeCell(c, core::Piece::kPawn)];
     core::bitboard_t enemy_pawns =
         board.b_pieces_[core::MakeCell(core::GetInvertedColor(c), core::Piece::kPawn)];
@@ -134,10 +134,32 @@ static search::score_t EvaluateKingColor(const core::Board& board, int32_t stage
       safety_score += kPawnShieldCostInv[shield_mask1][shield_mask2];
       safety_score += kPawnStormCostInv[storm_mask2][storm_mask3];
     }
-    safety_score = safety_score * stage / 256;
-    score += safety_score;
   }
 
+  core::bitboard_t b_pieces = board.b_pieces_[core::MakeCell(c, core::Piece::kRook)];
+  while (b_pieces) {
+    core::coord_t cell = core::ExtractLowest(b_pieces);
+    if ((core::kBitboardColumns[core::GetY(cell)]
+        & board.b_pieces_[core::MakeCell(c, core::Piece::kPawn)]) == 0) {
+      if ((core::kBitboardColumns[core::GetY(cell)]
+          & board.b_pieces_[core::MakeCell(core::GetInvertedColor(c), core::Piece::kPawn)]) == 0) {
+        if (std::abs(
+            core::GetY(board.GetKingPosition<core::GetInvertedColor(c)>()) - core::GetY(cell))
+            <= 1) {
+          safety_score += kRookOpenKingCol;
+        }
+      } else {
+        if (std::abs(
+            core::GetY(board.GetKingPosition<core::GetInvertedColor(c)>()) - core::GetY(cell))
+            <= 1) {
+          safety_score += kRookSemiOpenKingCol;
+        }
+      }
+    }
+  }
+
+  safety_score = safety_score * stage / 256;
+  score += safety_score;
   return score;
 }
 
@@ -264,18 +286,8 @@ static search::score_t EvaluatePiecesColor(const core::Board& board,
       if ((core::kBitboardColumns[core::GetY(cell)]
           & board.b_pieces_[core::MakeCell(core::GetInvertedColor(c), core::Piece::kPawn)]) == 0) {
         score += kRookOpenCol;
-        if (std::abs(
-            core::GetY(board.GetKingPosition<core::GetInvertedColor(c)>()) - core::GetY(cell))
-            <= 1) {
-          score += kRookOpenKingCol;
-        }
       } else {
         score += kRookSemiOpenCol;
-        if (std::abs(
-            core::GetY(board.GetKingPosition<core::GetInvertedColor(c)>()) - core::GetY(cell))
-            <= 1) {
-          score += kRookSemiOpenKingCol;
-        }
       }
     }
     if (opponent_queen & core::kBitboardColumns[core::GetY(cell)]) {

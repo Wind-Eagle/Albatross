@@ -143,12 +143,12 @@ constexpr search::score_t kProtectedPassedPawn[8] = {0, 75, 20, 10, 5, 0, 0, 0};
 constexpr search::score_t kPawnShield[6] = {5, 63, 15, 5, 48, 0};
 constexpr search::score_t kPawnStorm[6] = {-58, -27, 0, -8, -5, 0};
 
-constexpr search::score_t kRookOpenKingCol = 29;
-constexpr search::score_t kRookSemiOpenKingCol = 1;
+constexpr search::score_t kRookOpenKingCol = 37;
+constexpr search::score_t kRookSemiOpenKingCol = 11;
 constexpr search::score_t kRookOpposingQueen = 10;
 
-constexpr search::score_t kRookOpenCol = 25;
-constexpr search::score_t kRookSemiOpenCol = 21;
+constexpr search::score_t kRookOpenCol = 19;
+constexpr search::score_t kRookSemiOpenCol = 19;
 
 constexpr search::score_t kKnightPair = -20;
 constexpr search::score_t kBishopPair = 30;
