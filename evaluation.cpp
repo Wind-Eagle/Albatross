@@ -1,5 +1,6 @@
 #include "evaluation.h"
 #include "evaluation_consts.h"
+#include "movegen.h"
 
 extern core::bitboard_t kWhitePawnReversedAttacks[64], kBlackPawnReversedAttacks[64];
 
@@ -136,24 +137,40 @@ static search::score_t EvaluateKingColor(const core::Board& board, int32_t stage
     }
   }
 
-  core::bitboard_t b_pieces = board.b_pieces_[core::MakeCell(c, core::Piece::kRook)];
+  core::bitboard_t b_pieces = board.b_pieces_[core::MakeCell(core::GetInvertedColor(c), core::Piece::kRook)];
   while (b_pieces) {
     core::coord_t cell = core::ExtractLowest(b_pieces);
     if ((core::kBitboardColumns[core::GetY(cell)]
-        & board.b_pieces_[core::MakeCell(c, core::Piece::kPawn)]) == 0) {
+        & board.b_pieces_[core::MakeCell(core::GetInvertedColor(c), core::Piece::kPawn)]) == 0) {
       if ((core::kBitboardColumns[core::GetY(cell)]
-          & board.b_pieces_[core::MakeCell(core::GetInvertedColor(c), core::Piece::kPawn)]) == 0) {
+          & board.b_pieces_[core::MakeCell(c, core::Piece::kPawn)]) == 0) {
         if (std::abs(
-            core::GetY(board.GetKingPosition<core::GetInvertedColor(c)>()) - core::GetY(cell))
+            y - core::GetY(cell))
             <= 1) {
-          safety_score += kRookOpenKingCol;
+          safety_score += kRookOpenKing;
         }
       } else {
         if (std::abs(
-            core::GetY(board.GetKingPosition<core::GetInvertedColor(c)>()) - core::GetY(cell))
+            y - core::GetY(cell))
             <= 1) {
-          safety_score += kRookSemiOpenKingCol;
+          safety_score += kRookSemiOpenKing;
         }
+      }
+    }
+  }
+
+  if (x != core::GetFirstLine(core::GetInvertedColor(c))) {
+    core::bitboard_t b_pieces = board.b_pieces_[core::MakeCell(core::GetInvertedColor(c), core::Piece::kBishop)];
+    while (b_pieces) {
+      core::coord_t cell = core::ExtractLowest(b_pieces);
+      if (core::IsCellAttackedPiece<core::GetInvertedColor(c), core::Piece::kBishop>(board, core::IncX<c>(core::MakeCoord(x, y)), cell)) {
+        safety_score += kBishopAttackingKingNest;
+      }
+      if (y > 0 && core::IsCellAttackedPiece<core::GetInvertedColor(c), core::Piece::kBishop>(board, core::IncX<c>(core::MakeCoord(x, y - 1)), cell)) {
+        safety_score += kBishopAttackingKingNest;
+      }
+      if (y < 7 && core::IsCellAttackedPiece<core::GetInvertedColor(c), core::Piece::kBishop>(board, core::IncX<c>(core::MakeCoord(x, y + 1)), cell)) {
+        safety_score += kBishopAttackingKingNest;
       }
     }
   }

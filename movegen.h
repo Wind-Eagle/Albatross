@@ -19,6 +19,17 @@ enum class MoveGenType : int8_t {
   kCapture,
   kAll
 };
+
+template<Color c>
+inline bitboard_t GetDiagPieces(const Board& board) {
+  return board.b_pieces_[MakeCell(c, Piece::kBishop)] | board.b_pieces_[MakeCell(c, Piece::kQueen)];
+}
+
+template<Color c>
+inline bitboard_t GetLinePieces(const Board& board) {
+  return board.b_pieces_[MakeCell(c, Piece::kRook)] | board.b_pieces_[MakeCell(c, Piece::kQueen)];
+}
+
 template<Color c>
 size_t GenerateAllSimpleMoves(const Board& board, Move* list);
 template<Color c>
@@ -29,7 +40,8 @@ template<Color c>
 size_t GenerateAllMoves(const Board& board, Move* list);
 template<Color c>
 bool IsCellAttacked(const Board& board, coord_t src);
-
+template<Color c, Piece p>
+bool IsCellAttackedPiece(const Board& board, coord_t src, coord_t att);
 template<Color c>
 bool IsMoveValidColor(const Board& board, const Move& move);
 

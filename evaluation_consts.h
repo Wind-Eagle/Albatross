@@ -131,7 +131,7 @@ static constexpr search::score_t kPieceSecondPSQ[6][64] = {
 
 constexpr search::score_t kPieceFirstWeight[6] = {70, 327, 340, 530, 1000, 0};
 constexpr search::score_t kPieceSecondWeight[6] = {130, 327, 340, 530, 1000, 0};
-constexpr search::score_t kQueenDistance[12] = {0, 100, 55, 35, 20, 15, 7, 3, 0, 0, 0};
+constexpr search::score_t kQueenDistance[12] = {0, 75, 42, 30, 17, 12, 7, 3, 0, 0, 0};
 
 constexpr search::score_t kPassedPawn[8] = {0, 85, 45, 30, 15, 5, 0, 0};
 constexpr search::score_t kDoublePawn = -17;
@@ -143,10 +143,11 @@ constexpr search::score_t kProtectedPassedPawn[8] = {0, 75, 20, 10, 5, 0, 0, 0};
 constexpr search::score_t kPawnShield[6] = {5, 63, 15, 5, 48, 0};
 constexpr search::score_t kPawnStorm[6] = {-58, -27, 0, -8, -5, 0};
 
-constexpr search::score_t kRookOpenKingCol = 37;
-constexpr search::score_t kRookSemiOpenKingCol = 11;
-constexpr search::score_t kRookOpposingQueen = 10;
+constexpr search::score_t kRookOpenKing = -29;
+constexpr search::score_t kRookSemiOpenKing = -11;
+constexpr search::score_t kBishopAttackingKingNest = -23;
 
+constexpr search::score_t kRookOpposingQueen = 10;
 constexpr search::score_t kRookOpenCol = 19;
 constexpr search::score_t kRookSemiOpenCol = 19;
 

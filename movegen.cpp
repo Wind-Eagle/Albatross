@@ -204,16 +204,6 @@ inline static size_t GenerateBishopOrRook(const Board& board, Move* list, bitboa
 }
 
 template<Color c>
-inline static bitboard_t GetDiagPieces(const Board& board) {
-  return board.b_pieces_[MakeCell(c, Piece::kBishop)] | board.b_pieces_[MakeCell(c, Piece::kQueen)];
-}
-
-template<Color c>
-inline static bitboard_t GetLinePieces(const Board& board) {
-  return board.b_pieces_[MakeCell(c, Piece::kRook)] | board.b_pieces_[MakeCell(c, Piece::kQueen)];
-}
-
-template<Color c>
 bool IsCellAttacked(const Board& board, coord_t src) {
   if constexpr (c == Color::kWhite) {
     if (board.b_pieces_[MakeCell(c, Piece::kPawn)] & kWhitePawnReversedAttacks[src]) {
@@ -230,6 +220,45 @@ bool IsCellAttacked(const Board& board, coord_t src) {
   }
   return ((GetBishopMoves(board.b_all_, src) & GetDiagPieces<c>(board))
       || GetRookMoves(board.b_all_, src) & GetLinePieces<c>(board));
+}
+
+template<Color c, Piece p>
+bool IsCellAttackedPiece(const Board& board, coord_t src, coord_t att) {
+  bitboard_t attacker = (1ULL << att);
+  if constexpr (p == Piece::kPawn) {
+    if constexpr (c == Color::kWhite) {
+      if (attacker & kWhitePawnReversedAttacks[src]) {
+        return true;
+      }
+    } else {
+      if (attacker & kBlackPawnReversedAttacks[src]) {
+        return true;
+      }
+    }
+    return false;
+  }
+  if constexpr (p == Piece::kKnight) {
+    if (attacker & kKnightMoves[src]) {
+      return true;
+    }
+    return false;
+  }
+  if constexpr (p == Piece::kKing) {
+    if (attacker & kKingMoves[src]) {
+      return true;
+    }
+    return false;
+  }
+  if constexpr (p == Piece::kBishop) {
+    return (GetBishopMoves(board.b_all_, src) & attacker);
+  }
+  if constexpr (p == Piece::kRook) {
+    return (GetRookMoves(board.b_all_, src) & attacker);
+  }
+  if constexpr (p == Piece::kQueen) {
+    return ((GetBishopMoves(board.b_all_, src) | GetRookMoves(board.b_all_, src)) & attacker);
+  }
+  return false;
 }
 
 template<Color c>
@@ -423,6 +452,8 @@ template size_t GenerateAllMoves<Color::kWhite>(const Board& board, Move* list);
 template size_t GenerateAllMoves<Color::kBlack>(const Board& board, Move* list);
 template bool IsCellAttacked<Color::kWhite>(const Board& board, coord_t src);
 template bool IsCellAttacked<Color::kBlack>(const Board& board, coord_t src);
+template bool IsCellAttackedPiece<Color::kWhite, Piece::kBishop>(const Board& board, coord_t src, coord_t att);
+template bool IsCellAttackedPiece<Color::kBlack, Piece::kBishop>(const Board& board, coord_t src, coord_t att);
 template bitboard_t GetDiagPieces<Color::kWhite>(const Board& board);
 template bitboard_t GetDiagPieces<Color::kBlack>(const Board& board);
 template bitboard_t GetLinePieces<Color::kWhite>(const Board& board);
