@@ -222,43 +222,27 @@ bool IsCellAttacked(const Board& board, coord_t src) {
       || GetRookMoves(board.b_all_, src) & GetLinePieces<c>(board));
 }
 
-template<Color c, Piece p>
-bool IsCellAttackedPiece(const Board& board, coord_t src, coord_t att) {
-  bitboard_t attacker = (1ULL << att);
-  if constexpr (p == Piece::kPawn) {
-    if constexpr (c == Color::kWhite) {
-      if (attacker & kWhitePawnReversedAttacks[src]) {
-        return true;
-      }
-    } else {
-      if (attacker & kBlackPawnReversedAttacks[src]) {
-        return true;
-      }
-    }
-    return false;
+template<Color c>
+size_t IsZoneAttacked(const Board& board, coord_t src, bitboard_t zone) {
+  Piece p = core::GetPiece(board.cells_[src]);
+  if (p == Piece::kKnight) {
+    return __builtin_popcountll(kKnightMoves[src] & zone);
   }
-  if constexpr (p == Piece::kKnight) {
-    if (attacker & kKnightMoves[src]) {
-      return true;
-    }
-    return false;
+  if (p == Piece::kBishop) {
+    return __builtin_popcountll(GetBishopMoves(board.b_all_, src) & zone);
   }
-  if constexpr (p == Piece::kKing) {
-    if (attacker & kKingMoves[src]) {
-      return true;
-    }
-    return false;
+  if (p == Piece::kRook) {
+    return __builtin_popcountll(GetRookMoves(board.b_all_, src) & zone);
   }
-  if constexpr (p == Piece::kBishop) {
-    return (GetBishopMoves(board.b_all_, src) & attacker);
+  if (p == Piece::kQueen) {
+    return __builtin_popcountll((GetBishopMoves(board.b_all_, src) | GetRookMoves(board.b_all_, src)) & zone);
   }
-  if constexpr (p == Piece::kRook) {
-    return (GetRookMoves(board.b_all_, src) & attacker);
-  }
-  if constexpr (p == Piece::kQueen) {
-    return ((GetBishopMoves(board.b_all_, src) | GetRookMoves(board.b_all_, src)) & attacker);
-  }
-  return false;
+  return 0;
+}
+
+template<Color c>
+bitboard_t GetKingZoneBitboard(const Board& board) {
+  return kKingMoves[board.GetKingPosition<c>()];
 }
 
 template<Color c>
@@ -452,8 +436,10 @@ template size_t GenerateAllMoves<Color::kWhite>(const Board& board, Move* list);
 template size_t GenerateAllMoves<Color::kBlack>(const Board& board, Move* list);
 template bool IsCellAttacked<Color::kWhite>(const Board& board, coord_t src);
 template bool IsCellAttacked<Color::kBlack>(const Board& board, coord_t src);
-template bool IsCellAttackedPiece<Color::kWhite, Piece::kBishop>(const Board& board, coord_t src, coord_t att);
-template bool IsCellAttackedPiece<Color::kBlack, Piece::kBishop>(const Board& board, coord_t src, coord_t att);
+template size_t IsZoneAttacked<Color::kWhite>(const Board& board, coord_t src, bitboard_t zone);
+template size_t IsZoneAttacked<Color::kBlack>(const Board& board, coord_t src, bitboard_t zone);
+template bitboard_t GetKingZoneBitboard<Color::kWhite>(const Board& board);
+template bitboard_t GetKingZoneBitboard<Color::kBlack>(const Board& board);
 template bitboard_t GetDiagPieces<Color::kWhite>(const Board& board);
 template bitboard_t GetDiagPieces<Color::kBlack>(const Board& board);
 template bitboard_t GetLinePieces<Color::kWhite>(const Board& board);

@@ -40,13 +40,16 @@ template<Color c>
 size_t GenerateAllMoves(const Board& board, Move* list);
 template<Color c>
 bool IsCellAttacked(const Board& board, coord_t src);
-template<Color c, Piece p>
-bool IsCellAttackedPiece(const Board& board, coord_t src, coord_t att);
+template<Color c>
+size_t IsZoneAttacked(const Board& board, coord_t src, bitboard_t zone);
 template<Color c>
 bool IsMoveValidColor(const Board& board, const Move& move);
 
 bool IsKingAttacked(const Board &board);
 bool IsOpponentKingAttacked(const Board &board);
+
+template<Color c>
+bitboard_t GetKingZoneBitboard(const Board& board);
 
 inline bool IsKillerValid(const Board& board, const Move& move) {
   // En passant captures are never even considered as killer moves,

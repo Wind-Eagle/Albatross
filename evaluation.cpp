@@ -93,19 +93,10 @@ static int GetDistance(core::coord_t lhs, core::coord_t rhs) {
 template<core::Color c>
 static search::score_t EvaluateKingColor(const core::Board& board, int32_t stage) {
   search::score_t score = 0;
-  if constexpr (c == core::Color::kWhite) {
-    if (board.b_pieces_[core::MakeCell('q')] != 0) {
-      score -= kQueenDistance[GetDistance(core::GetLowest(board.b_pieces_[core::MakeCell('q')]),
-                                          board.GetKingPosition<core::Color::kWhite>())];
-    }
-  } else {
-    if (board.b_pieces_[core::MakeCell('Q')] != 0) {
-      score -= kQueenDistance[GetDistance(core::GetLowest(board.b_pieces_[core::MakeCell('Q')]),
-                                          board.GetKingPosition<core::Color::kBlack>())];
-    }
-  }
-
   search::score_t safety_score = 0;
+  int attack_score = 0;
+
+  core::coord_t king_coord = board.GetKingPosition<c>();
   core::subcoord_t x = core::GetX(board.GetKingPosition<c>());
   core::subcoord_t y = core::GetY(board.GetKingPosition<c>());
   if (!board.IsKingsideCastling(c) && !board.IsQueensideCastling(c)
@@ -137,44 +128,31 @@ static search::score_t EvaluateKingColor(const core::Board& board, int32_t stage
     }
   }
 
-  core::bitboard_t b_pieces = board.b_pieces_[core::MakeCell(core::GetInvertedColor(c), core::Piece::kRook)];
-  while (b_pieces) {
-    core::coord_t cell = core::ExtractLowest(b_pieces);
-    if ((core::kBitboardColumns[core::GetY(cell)]
-        & board.b_pieces_[core::MakeCell(core::GetInvertedColor(c), core::Piece::kPawn)]) == 0) {
-      if ((core::kBitboardColumns[core::GetY(cell)]
-          & board.b_pieces_[core::MakeCell(c, core::Piece::kPawn)]) == 0) {
-        if (std::abs(
-            y - core::GetY(cell))
-            <= 1) {
-          safety_score += kRookOpenKing;
-        }
-      } else {
-        if (std::abs(
-            y - core::GetY(cell))
-            <= 1) {
-          safety_score += kRookSemiOpenKing;
-        }
-      }
+  core::bitboard_t king_zone = core::GetKingZoneBitboard<c>(board);
+  /*if (x != core::GetPromotionLine(c) && x != core::GetFirstLine(core::GetInvertedColor(c))) {
+    king_zone |= (1ULL << core::IncXDouble<c>(1ULL << king_coord));
+    if (y > 0) {
+      king_zone |= (1ULL << (core::IncXDouble<c>(1ULL << king_coord) - 1));
     }
-  }
-
-  if (x != core::GetFirstLine(core::GetInvertedColor(c))) {
-    core::bitboard_t b_pieces = board.b_pieces_[core::MakeCell(core::GetInvertedColor(c), core::Piece::kBishop)];
+    if (y < 7) {
+      king_zone |= (1ULL << (core::IncXDouble<c>(1ULL << king_coord) + 1));
+    }
+  }*/
+  int att_count = 0;
+  for (auto p : {core::Piece::kKnight, core::Piece::kBishop, core::Piece::kRook, core::Piece::kQueen}) {
+    core::bitboard_t b_pieces = board.b_pieces_[core::MakeCell(core::GetInvertedColor(c), p)];
     while (b_pieces) {
       core::coord_t cell = core::ExtractLowest(b_pieces);
-      if (core::IsCellAttackedPiece<core::GetInvertedColor(c), core::Piece::kBishop>(board, core::IncX<c>(core::MakeCoord(x, y)), cell)) {
-        safety_score += kBishopAttackingKingNest;
+      int add = core::IsZoneAttacked<core::GetInvertedColor(c)>(board, cell,  king_zone);
+      if (add > 0) {
+        att_count++;
       }
-      if (y > 0 && core::IsCellAttackedPiece<core::GetInvertedColor(c), core::Piece::kBishop>(board, core::IncX<c>(core::MakeCoord(x, y - 1)), cell)) {
-        safety_score += kBishopAttackingKingNest;
-      }
-      if (y < 7 && core::IsCellAttackedPiece<core::GetInvertedColor(c), core::Piece::kBishop>(board, core::IncX<c>(core::MakeCoord(x, y + 1)), cell)) {
-        safety_score += kBishopAttackingKingNest;
-      }
+      attack_score += add * kKingAttack[static_cast<int>(p) - 1];
     }
   }
 
+  att_count = std::min(att_count, 7);
+  safety_score -= attack_score * kKingAttackTable[att_count] / 100;
   safety_score = safety_score * stage / 256;
   score += safety_score;
   return score;

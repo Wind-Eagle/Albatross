@@ -142,10 +142,8 @@ constexpr search::score_t kProtectedPassedPawn[8] = {0, 75, 20, 10, 5, 0, 0, 0};
 
 constexpr search::score_t kPawnShield[6] = {5, 63, 15, 5, 48, 0};
 constexpr search::score_t kPawnStorm[6] = {-58, -27, 0, -8, -5, 0};
-
-constexpr search::score_t kRookOpenKing = -29;
-constexpr search::score_t kRookSemiOpenKing = -11;
-constexpr search::score_t kBishopAttackingKingNest = -23;
+constexpr search::score_t kKingAttack[6] = {0, 12, 12, 24, 48, 0};
+constexpr search::score_t kKingAttackTable[8] = {0, 25, 50, 75, 88, 94, 97, 99};
 
 constexpr search::score_t kRookOpposingQueen = 10;
 constexpr search::score_t kRookOpenCol = 19;
