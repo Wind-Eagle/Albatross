@@ -96,7 +96,6 @@ static search::score_t EvaluateKingColor(const core::Board& board, int32_t stage
   search::score_t safety_score = 0;
   int attack_score = 0;
 
-  core::coord_t king_coord = board.GetKingPosition<c>();
   core::subcoord_t x = core::GetX(board.GetKingPosition<c>());
   core::subcoord_t y = core::GetY(board.GetKingPosition<c>());
   if (!board.IsKingsideCastling(c) && !board.IsQueensideCastling(c)
@@ -129,17 +128,8 @@ static search::score_t EvaluateKingColor(const core::Board& board, int32_t stage
   }
 
   core::bitboard_t king_zone = core::GetKingZoneBitboard<c>(board);
-  /*if (x != core::GetPromotionLine(c) && x != core::GetFirstLine(core::GetInvertedColor(c))) {
-    king_zone |= (1ULL << core::IncXDouble<c>(1ULL << king_coord));
-    if (y > 0) {
-      king_zone |= (1ULL << (core::IncXDouble<c>(1ULL << king_coord) - 1));
-    }
-    if (y < 7) {
-      king_zone |= (1ULL << (core::IncXDouble<c>(1ULL << king_coord) + 1));
-    }
-  }*/
-  int att_count = 0;
-  for (auto p : {core::Piece::kKnight, core::Piece::kBishop, core::Piece::kRook, core::Piece::kQueen}) {
+  int att_count = (board.b_pieces_[core::MakeCell(core::GetInvertedColor(c), core::Piece::kQueen)] > 0);
+  for (auto p : {core::Piece::kKnight, core::Piece::kBishop, core::Piece::kRook}) {
     core::bitboard_t b_pieces = board.b_pieces_[core::MakeCell(core::GetInvertedColor(c), p)];
     while (b_pieces) {
       core::coord_t cell = core::ExtractLowest(b_pieces);
@@ -148,6 +138,16 @@ static search::score_t EvaluateKingColor(const core::Board& board, int32_t stage
         att_count++;
       }
       attack_score += add * kKingAttack[static_cast<int>(p) - 1];
+    }
+  }
+
+  if constexpr (c == core::Color::kWhite) {
+    if (board.b_pieces_[core::MakeCell('q')] != 0) {
+      attack_score += kQueenDistance[GetDistance(core::GetLowest(board.b_pieces_[core::MakeCell('q')]), board.GetKingPosition<core::Color::kWhite>())];
+    }
+  } else {
+    if (board.b_pieces_[core::MakeCell('Q')] != 0) {
+      attack_score += kQueenDistance[GetDistance(core::GetLowest(board.b_pieces_[core::MakeCell('Q')]), board.GetKingPosition<core::Color::kBlack>())];
     }
   }
 
@@ -300,29 +300,35 @@ static search::score_t EvaluatePieces(const core::Board& board, [[maybe_unused]]
   return score;
 }
 
-search::score_t Evaluator::EvaluationFunction(const core::Board& board, int32_t stage) {
-  search::score_t score = 0;
+void Evaluator::EvaluationFunction(const core::Board& board, search::score_t& score, search::score_t alpha, search::score_t beta, int32_t stage) {
+  if (CheckLazyEval(board, score, alpha, beta, kDynamicEvalThreshold)) {
+    return;
+  }
   score += EvaluatePawns(board, table_);
+  if (CheckLazyEval(board, score, alpha, beta, kPawnEvalThreshold)) {
+    return;
+  }
+  score += EvaluateKing(board, stage);
+  if (CheckLazyEval(board, score, alpha, beta, kKingSafetyThreshold)) {
+    return;
+  }
   score += EvaluateMaterial(board, stage);
   score += EvaluatePieces(board, stage);
-  score += EvaluateKing(board, stage);
-  return score;
 }
 
 bool Evaluator::CheckLazyEval(const core::Board& board,
-                              search::score_t& score,
+                              search::score_t score,
                               search::score_t alpha,
-                              search::score_t beta) {
+                              search::score_t beta,
+                              const search::score_t diff) {
   search::score_t cur_score = score;
   if (board.move_side_ == core::Color::kBlack) {
     cur_score = -cur_score;
   }
-  if (cur_score < alpha - kDynamicEvalThreshold) {
-    score = alpha;
+  if (cur_score < alpha - diff) {
     return true;
   }
-  if (cur_score > beta + kDynamicEvalThreshold) {
-    score = beta;
+  if (cur_score > beta + diff) {
     return true;
   }
   return false;
@@ -402,10 +408,7 @@ search::score_t Evaluator::Evaluate(const core::Board& board,
     }
     return score;
   }
-  if (CheckLazyEval(board, score, alpha, beta)) {
-    return score;
-  }
-  score += EvaluationFunction(board, stage);
+  EvaluationFunction(board, score, alpha, beta, stage);
   if (board.move_side_ == core::Color::kBlack) {
     score = -score;
   }

@@ -232,7 +232,7 @@ void HandleAvCost() {
   core::Board board;
   size_t cnt = 0;
   size_t pos_cost = 0;
-  std::cout<<"Old avcost is: 0.0739969"<<std::endl;
+  std::cout<<"Old avcost is: 0.073633"<<std::endl;
   while (getline(fin, s)) {
     cnt++;
     if (cnt > 10000) {

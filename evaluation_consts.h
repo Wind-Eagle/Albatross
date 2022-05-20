@@ -51,14 +51,14 @@ static constexpr search::score_t kPieceFirstPSQ[6][64] = {
         -15, -10, -5, 0, 0, -10, -5, -15,
         -10, -5, 0, 0, 0, 0, -5, -10,
         -5, 0, 0, 0, 0, 0, 0, -5,
-        5, 0, 0, 0, 0, 0, 0, 5,
-        10, 5, 0, 0, 0, 0, 5, 10,
-        15, 10, 5, 0, 0, 5, 10, 15,
-        20, 20, 20, 20, 20, 20, 20, 20
+        0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0,
+        15, 15, 15, 15, 15, 15, 15, 15,
+        10, 10, 10, 10, 10, 10, 10, 10
     },
     {
-        0, 15, -15, -50, -50, -15, 15, 0,
-        -5, -15, -25, -75, -75, -25, -15, -5,
+        0, 15, -15, -30, -30, -15, 15, 0,
+        -5, 0, -15, -50, -50, -15, 0, -5,
         -75, -75, -75, -75, -75, -75, -75, -75,
         -75, -75, -75, -75, -75, -75, -75, -75,
         -75, -75, -75, -75, -75, -75, -75, -75,
@@ -113,10 +113,10 @@ static constexpr search::score_t kPieceSecondPSQ[6][64] = {
         -15, -10, -5, 0, 0, -10, -5, -15,
         -10, -5, 0, 0, 0, 0, -5, -10,
         -5, 0, 0, 0, 0, 0, 0, -5,
-        5, 0, 0, 0, 0, 0, 0, 5,
-        10, 5, 0, 0, 0, 0, 5, 10,
-        15, 10, 5, 0, 0, 5, 10, 15,
-        20, 20, 20, 20, 20, 20, 20, 20
+        0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0,
+        15, 15, 15, 15, 15, 15, 15, 15,
+        10, 10, 10, 10, 10, 10, 10, 10
     },
     {
         -25, -20, -10, 0, 0, -10, -20, -25,
@@ -131,7 +131,7 @@ static constexpr search::score_t kPieceSecondPSQ[6][64] = {
 
 constexpr search::score_t kPieceFirstWeight[6] = {70, 327, 340, 530, 1000, 0};
 constexpr search::score_t kPieceSecondWeight[6] = {130, 327, 340, 530, 1000, 0};
-constexpr search::score_t kQueenDistance[12] = {0, 75, 42, 30, 17, 12, 7, 3, 0, 0, 0};
+constexpr search::score_t kQueenDistance[12] = {0, 120, 70, 45, 25, 16, 9, 4, 1, 0, 0};
 
 constexpr search::score_t kPassedPawn[8] = {0, 85, 45, 30, 15, 5, 0, 0};
 constexpr search::score_t kDoublePawn = -17;
@@ -142,8 +142,8 @@ constexpr search::score_t kProtectedPassedPawn[8] = {0, 75, 20, 10, 5, 0, 0, 0};
 
 constexpr search::score_t kPawnShield[6] = {5, 63, 15, 5, 48, 0};
 constexpr search::score_t kPawnStorm[6] = {-58, -27, 0, -8, -5, 0};
-constexpr search::score_t kKingAttack[6] = {0, 12, 12, 24, 48, 0};
-constexpr search::score_t kKingAttackTable[8] = {0, 25, 50, 75, 88, 94, 97, 99};
+constexpr search::score_t kKingAttack[6] = {0, 10, 10, 20, 40, 0};
+constexpr search::score_t kKingAttackTable[8] = {0, 0, 50, 75, 88, 94, 97, 99};
 
 constexpr search::score_t kRookOpposingQueen = 10;
 constexpr search::score_t kRookOpenCol = 19;
@@ -156,7 +156,9 @@ constexpr search::score_t kRookPair = -1;
 constexpr int8_t kPieceTaperedWeight[7] = {0, 0, 1, 1, 2, 4, 0};
 constexpr int16_t kFullTaperedEval = 24;
 
-constexpr search::score_t kDynamicEvalThreshold = 300;
+constexpr search::score_t kDynamicEvalThreshold = 500;
+constexpr search::score_t kPawnEvalThreshold = 200;
+constexpr search::score_t kKingSafetyThreshold = 100;
 
 void InitEvaluation();
 
