@@ -20,11 +20,11 @@ static constexpr search::score_t kPieceFirstPSQ[6][64] = {
         -73, -37, -16, -4, -3, -12, -38, -85,
         -27, -12, 0, 6, 7, 0, -11, -23,
         -17, -3, 11, 16, 17, 12, -3, -16,
-        -7, 10, 22, 31, 35, 21, 11, -5,
-        -7, 10, 22, 35, 38, 26, 18, 2,
-        -17, -3, 11, 16, 27, 22, 15, 7,
-        -27, -12, 0, 11, 12, 5, 0, -29,
-        -85, -37, -16, -4, -3, -12, -38, -73,
+        -7, 10, 22, 31, 35, 21, 11, -7,
+        -7, 10, 22, 41, 45, 26, 18, -7,
+        -17, 12, 21, 31, 27, 22, 12, -17,
+        -27, -12, 0, 11, 12, 0, -12, -29,
+        -85, -37, -16, -4, -3, -12, -38, -73
     },
     {
         0, -20, -10, -10, -10, -10, -20, 0,
@@ -80,13 +80,13 @@ static constexpr search::score_t kPieceSecondPSQ[6][64] = {
     },
     {
         -73, -37, -16, -4, -3, -12, -38, -85,
-        -31, -12, 0, 6, 7, 0, -11, -33,
+        -27, -12, 0, 6, 7, 0, -11, -23,
         -17, -3, 11, 16, 17, 12, -3, -16,
-        -7, 10, 22, 31, 35, 21, 11, -5,
-        -7, 10, 22, 35, 38, 26, 18, 2,
-        -17, -3, 11, 16, 27, 22, 15, 7,
-        -31, -12, 0, 11, 12, 5, 0, -33,
-        -85, -37, -16, -4, -3, -12, -38, -73,
+        -7, 10, 22, 31, 35, 21, 11, -7,
+        -7, 10, 22, 41, 45, 26, 18, -7,
+        -17, 12, 21, 31, 27, 22, 12, -17,
+        -27, -12, 0, 11, 12, 0, -12, -29,
+        -85, -37, -16, -4, -3, -12, -38, -73
     },
     {
         0, -10, -5, -5, -5, -5, -10, 0,
@@ -129,29 +129,30 @@ static constexpr search::score_t kPieceSecondPSQ[6][64] = {
         5, 10, 17, 25, 25, 17, 10, 5
     }};
 
-constexpr search::score_t kPieceFirstWeight[6] = {70, 327, 340, 530, 1000, 0};
-constexpr search::score_t kPieceSecondWeight[6] = {130, 327, 340, 530, 1000, 0};
+constexpr search::score_t kPieceFirstWeight[6] = {70, 350, 340, 530, 1000, 0};
+constexpr search::score_t kPieceSecondWeight[6] = {100, 320, 340, 530, 1000, 0};
 constexpr search::score_t kQueenDistance[12] = {0, 120, 70, 45, 25, 16, 9, 4, 1, 0, 0};
 
 constexpr search::score_t kPassedPawn[8] = {0, 85, 45, 30, 15, 5, 0, 0};
 constexpr search::score_t kDoublePawn = -17;
-constexpr search::score_t kIsolatedPawn = -16;
-constexpr search::score_t kIsolatedPassedPawn = -27;
+constexpr search::score_t kIsolatedPawn = -5;
+constexpr search::score_t kIsolatedPassedPawn = -15;
 constexpr search::score_t kProtectedPawn = 5;
 constexpr search::score_t kProtectedPassedPawn[8] = {0, 75, 20, 10, 5, 0, 0, 0};
+constexpr search::score_t kPawnIsland = -12;
 
-constexpr search::score_t kPawnShield[6] = {5, 63, 15, 5, 48, 0};
-constexpr search::score_t kPawnStorm[6] = {-58, -27, 0, -8, -5, 0};
+constexpr search::score_t kPawnShield[6] = {5, 44, 10, 0, 31, 0};
+constexpr search::score_t kPawnStorm[6] = {-43, -31, -12, -8, -5, 0};
 constexpr search::score_t kKingAttack[6] = {0, 10, 10, 20, 40, 0};
 constexpr search::score_t kKingAttackTable[8] = {0, 0, 50, 75, 88, 94, 97, 99};
 
 constexpr search::score_t kRookOpposingQueen = 10;
-constexpr search::score_t kRookOpenCol = 19;
-constexpr search::score_t kRookSemiOpenCol = 19;
+constexpr search::score_t kRookOpenCol = 24;
+constexpr search::score_t kRookSemiOpenCol = 21;
 
 constexpr search::score_t kKnightPair = -20;
 constexpr search::score_t kBishopPair = 30;
-constexpr search::score_t kRookPair = -1;
+constexpr search::score_t kRookPair = -20;
 
 constexpr int8_t kPieceTaperedWeight[7] = {0, 0, 1, 1, 2, 4, 0};
 constexpr int16_t kFullTaperedEval = 24;

@@ -10,6 +10,7 @@ core::bitboard_t kWhitePassedPawnBitboard[64], kBlackPassedPawnBitboard[64];
 core::bitboard_t kWhiteOpenPawnBitboard[64], kBlackOpenPawnBitboard[64];
 core::bitboard_t kIsolatedPawnBitboard[64];
 core::bitboard_t kIsolatedPieceBitboard[64];
+int kPawnIslands[256];
 
 search::score_t kPawnShieldCost[8][8], kPawnStormCost[8][8];
 search::score_t kPawnShieldCostInv[8][8], kPawnStormCostInv[8][8];
@@ -79,6 +80,13 @@ void InitEvaluation() {
           kPawnStormCost[i][j] += kPawnStorm[k + 3];
           kPawnStormCostInv[i][j] += kPawnStorm[5 - k];
         }
+      }
+    }
+  }
+  for (int i = 0; i < 256; i++) {
+    for (int j = 0; j < 8; j++) {
+      if (((i & (1 << j)) != 0) && ((i & (1 << (j + 1))) == 0)) {
+        kPawnIslands[i]++;
       }
     }
   }
@@ -174,9 +182,11 @@ static search::score_t EvaluatePawnsColor(const core::Board& board) {
       (c == core::Color::kWhite ? (our_pawns & (~core::kBitboardColumns[7])) << 9 :
        (our_pawns & (~core::kBitboardColumns[7])) >> 7);
   core::bitboard_t attacks = (left | right);
+  int pawn_islands = 0;
   score += __builtin_popcountll(our_pawns & attacks) * kProtectedPawn;
   while (b_pieces) {
     core::coord_t cell = core::ExtractLowest(b_pieces);
+    pawn_islands |= (1ULL << core::GetY((cell)));
     bool is_pawn_passed = false;
     if constexpr (c == core::Color::kWhite) {
       if (!(kWhiteOpenPawnBitboard[cell] & all_pawns)) {
@@ -213,6 +223,7 @@ static search::score_t EvaluatePawnsColor(const core::Board& board) {
       }
     }
   }
+  score += kPawnIslands[pawn_islands] * kPawnIsland;
 
   return score;
 }
