@@ -158,8 +158,8 @@ constexpr int8_t kPieceTaperedWeight[7] = {0, 0, 1, 1, 2, 4, 0};
 constexpr int16_t kFullTaperedEval = 24;
 
 constexpr search::score_t kDynamicEvalThreshold = 500;
-constexpr search::score_t kPawnEvalThreshold = 200;
-constexpr search::score_t kKingSafetyThreshold = 100;
+constexpr search::score_t kPawnEvalThreshold = 350;
+constexpr search::score_t kKingSafetyThreshold = 200;
 
 void InitEvaluation();
 

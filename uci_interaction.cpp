@@ -235,9 +235,6 @@ void HandleAvCost() {
   std::cout<<"Old avcost is: 0.0726263"<<std::endl;
   while (getline(fin, s)) {
     cnt++;
-    if (cnt > 10000) {
-      break;
-    }
     double res = 0.5;
     if (s[5] == 'W') {
       res = 1;
